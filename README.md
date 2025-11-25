@@ -41,34 +41,43 @@ A comprehensive, locally-hosted college management system with attendance tracki
 ### Prerequisites
 - Docker & Docker Compose
 - Node.js 20+ (for local development)
-- PostgreSQL client (optional, for direct DB access)
+- Git
 
 ### Setup
 
-1. **Clone and navigate**:
+1. **Clone repository**:
 ```bash
+git clone https://github.com/irfan1476/mrit-hub.git
 cd mrit-hub
 ```
 
-2. **Create environment file**:
+2. **Configure environment**:
 ```bash
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env with your credentials:
+# - GOOGLE_CLIENT_ID
+# - GOOGLE_CLIENT_SECRET
+# - SMS_GATEWAY_URL
+# - SMS_GATEWAY_API_KEY
+# - JWT_SECRET
 ```
 
 3. **Start all services**:
 ```bash
-docker-compose up -d
+./start.sh
+# Or manually: docker-compose up -d
 ```
 
 4. **Verify services**:
 ```bash
 docker-compose ps
+# All services should show "Up" or "healthy"
 ```
 
-5. **Check logs**:
+5. **Check database**:
 ```bash
-docker-compose logs -f backend
+docker exec -it mrit-postgres psql -U mrit_admin -d mrit_hub -c "\dt"
+# Should list 27 tables
 ```
 
 ### Access Points
@@ -96,44 +105,69 @@ Initial data includes:
 
 ## 🔧 Development
 
+### Current Status
+- ✅ Phase 0: Foundation Complete
+- ⏳ Phase 1: Authentication Module (Next)
+- ⏳ Phase 2-6: Pending
+
 ### Install backend dependencies:
 ```bash
 cd backend
 npm install
 ```
 
-### Run backend locally (without Docker):
+### Backend development (Phase 1+):
 ```bash
 cd backend
 npm run start:dev
+# Backend will be available at http://localhost:3000
 ```
 
-### Database migrations:
+### Database access:
 ```bash
-# Migrations are auto-run on container startup
-# Manual execution:
-docker exec -i mrit-postgres psql -U mrit_admin -d mrit_hub < database/init/01-schema.sql
+# Via Docker
+docker exec -it mrit-postgres psql -U mrit_admin -d mrit_hub
+
+# Common queries
+\dt                                    # List tables
+\d table_name                          # Describe table
+SELECT COUNT(*) FROM department;      # Should return 10
+```
+
+### View logs:
+```bash
+docker-compose logs -f                # All services
+docker-compose logs -f backend        # Backend only
+docker-compose logs -f postgres       # Database only
 ```
 
 ## 📁 Project Structure
 
 ```
 mrit-hub/
-├── backend/              # NestJS application
-│   ├── src/
-│   │   ├── modules/     # Feature modules
-│   │   ├── common/      # Shared utilities
-│   │   └── main.ts      # Entry point
-│   ├── Dockerfile
-│   └── package.json
+├── backend/                    # NestJS application
+│   ├── src/                   # Source code (Phase 1+)
+│   ├── Dockerfile             # Multi-stage build
+│   ├── package.json           # Dependencies (30+)
+│   └── tsconfig.json          # TypeScript config
 ├── database/
-│   ├── init/            # Schema and seed data
-│   └── migrations/      # Future migrations
+│   ├── init/
+│   │   ├── 01-schema.sql     # 27 tables
+│   │   └── 02-seed.sql       # Master data
+│   └── migrations/            # Future migrations
 ├── nginx/
-│   └── nginx.conf       # Reverse proxy config
-├── docs/                # Documentation
-├── docker-compose.yml   # Service orchestration
-└── .env.example         # Environment template
+│   └── nginx.conf             # Reverse proxy
+├── docs/
+│   ├── DATABASE-ERD.md        # Schema documentation
+│   ├── PHASE-0-COMPLETE.md    # Phase summary
+│   └── GITHUB-SETUP.md        # Git guide
+├── docker-compose.yml         # 4 services
+├── .env.example               # Environment template
+├── start.sh                   # Quick start script
+├── verify.sh                  # Verification script
+├── GETTING-STARTED.md         # Quick start guide
+├── QUICK-REFERENCE.md         # Command reference
+└── README.md                  # This file
 ```
 
 ## 🔐 Security
@@ -167,15 +201,21 @@ The system is designed to handle:
 | Reverse Proxy | Nginx | Load balancing, SSL |
 | Containerization | Docker | Deployment |
 
-## 📝 API Documentation
+## 📝 Documentation
 
-API documentation will be available at:
-- Swagger UI: http://localhost:3000/api/docs (to be implemented)
+- **README.md**: This file - project overview
+- **GETTING-STARTED.md**: Quick start guide
+- **QUICK-REFERENCE.md**: Common commands
+- **STATUS.md**: Progress tracker
+- **docs/DATABASE-ERD.md**: Complete schema
+- **docs/PHASE-0-COMPLETE.md**: Foundation details
+- **GITHUB-SETUP.md**: Git workflow
 
-## 🧪 Testing
+## 🧪 Testing (Phase 1+)
 
 ```bash
 # Unit tests
+cd backend
 npm run test
 
 # E2E tests
@@ -185,11 +225,49 @@ npm run test:e2e
 npm run test:cov
 ```
 
+## 📈 Development Roadmap
+
+| Phase | Module | Status | Duration |
+|-------|--------|--------|----------|
+| Phase 0 | Foundation Setup | ✅ Complete | 1 day |
+| Phase 1 | Authentication | ⏳ Pending | 4-6 hours |
+| Phase 2 | Attendance System | ⏳ Pending | 5 days |
+| Phase 3 | Identity Verification | ⏳ Pending | 2 days |
+| Phase 4 | SIS-lite | ⏳ Pending | 1 day |
+| Phase 5 | Account Requests | ⏳ Pending | 1 day |
+| Phase 6 | Deployment | ⏳ Pending | 2 days |
+
+**Overall Progress**: 8% (1/12 days)
+
+## 🐛 Troubleshooting
+
+### Services won't start
+```bash
+docker-compose down
+docker-compose up -d
+docker-compose logs
+```
+
+### Port conflicts
+Edit `docker-compose.yml` and change port mappings
+
+### Database connection failed
+```bash
+docker-compose restart postgres
+docker-compose logs postgres
+```
+
+### Clear all data (CAUTION)
+```bash
+docker-compose down -v  # Removes volumes
+```
+
 ## 📞 Support
 
 For issues or questions:
+- GitHub Issues: https://github.com/irfan1476/mrit-hub/issues
 - Email: support@mrit.ac.in
-- Internal: IT Helpdesk
+- Documentation: See docs/ folder
 
 ## 📄 License
 
@@ -197,5 +275,6 @@ Proprietary - MRIT Internal Use Only
 
 ---
 
-**Status**: Phase 0 Complete - Foundation Setup ✅  
-**Next**: Phase 1 - Authentication Module
+**Current Status**: ✅ Phase 0 Complete - Foundation Ready  
+**Next Step**: Phase 1 - Authentication Module  
+**Repository**: https://github.com/irfan1476/mrit-hub
