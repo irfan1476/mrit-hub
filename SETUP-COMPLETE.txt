@@ -70,7 +70,7 @@ Overall MVP: 8% Complete (1/12 days)
 🎯 NEXT STEPS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. Connect to GitHub
-2. Configure Google OAuth credentials
+2. Configure JWT secret for authentication
 3. Start Docker services
 4. Begin Phase 1: Authentication Module
 

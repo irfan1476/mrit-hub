@@ -2,10 +2,10 @@
 
 ## What Was Built
 
-### 1. Google OAuth Integration
+### 1. Email/Password Authentication
 - **Domain Restriction**: Only `@mysururoyal.org` emails allowed
-- **Server-side Validation**: ID token verification with Google's public keys
-- **Minimal Scopes**: `openid`, `email`, `profile` only
+- **Server-side Validation**: Email verification with secure tokens
+- **Password Security**: bcrypt hashing with 12 rounds
 - **Production URLs**: `https://hub.mysururoyal.org`
 
 ### 2. JWT Token System
@@ -26,7 +26,7 @@
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     email VARCHAR(255) UNIQUE NOT NULL,
-    google_sub VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     role user_role_enum NOT NULL,
     student_id INTEGER REFERENCES student_data(id),
     faculty_id INTEGER REFERENCES faculty(id),
@@ -41,8 +41,8 @@ CREATE TABLE users (
 
 | Method | Endpoint | Description | Auth Required |
 |--------|----------|-------------|---------------|
-| GET | `/api/v1/auth/google/login` | Initiate Google OAuth | No |
-| GET | `/api/v1/auth/google/callback` | OAuth callback | No |
+| POST | `/api/v1/auth/register` | User registration | No |
+| GET | `/api/v1/auth/verify-email` | Email verification | No |
 | GET | `/api/v1/auth/me` | Get current user profile | Yes |
 | POST | `/api/v1/auth/refresh` | Refresh access token | No |
 | POST | `/api/v1/auth/logout` | Logout user | Yes |
@@ -84,10 +84,10 @@ backend/src/
 ├── modules/
 │   ├── auth/
 │   │   ├── auth.module.ts           ✅ Auth module
-│   │   ├── auth.controller.ts       ✅ OAuth endpoints
+│   │   ├── auth.controller.ts       ✅ Auth endpoints
 │   │   ├── auth.service.ts          ✅ Auth business logic
 │   │   ├── strategies/
-│   │   │   ├── google.strategy.ts   ✅ Google OAuth strategy
+│   │   │   └── jwt.strategy.ts      ✅ JWT validation strategy
 │   │   │   └── jwt.strategy.ts      ✅ JWT validation
 │   │   └── dto/
 │   │       └── auth.dto.ts          ✅ Request/response DTOs
@@ -109,10 +109,8 @@ backend/src/
 
 ### Required Variables
 ```bash
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:3000/api/v1/auth/google/callback
+# JWT Authentication
+JWT_SECRET=your_secure_jwt_secret
 ALLOWED_EMAIL_DOMAIN=mysururoyal.org
 
 # JWT
@@ -136,8 +134,10 @@ cd backend && npm run start:dev
 # Health check
 curl http://localhost:3000/api/v1/health
 
-# Google login (redirects to Google)
-curl http://localhost:3000/api/v1/auth/google/login
+# User registration
+curl -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@mysururoyal.org","password":"SecurePass123!","firstName":"Test","lastName":"User"}'
 
 # Get profile (requires JWT token)
 curl -H "Authorization: Bearer <jwt_token>" \
@@ -146,12 +146,12 @@ curl -H "Authorization: Bearer <jwt_token>" \
 
 ## Next Steps for Production
 
-### 1. Google Cloud Console Setup
-1. Create OAuth 2.0 Client ID
-2. Set authorized domains: `mysururoyal.org`
-3. Set redirect URIs:
-   - Dev: `http://localhost:3000/api/v1/auth/google/callback`
-   - Prod: `https://hub.mysururoyal.org/api/v1/auth/google/callback`
+### 1. JWT Secret Generation
+1. Generate secure JWT secret:
+   ```bash
+   openssl rand -base64 32
+   ```
+2. Add to environment variables
 
 ### 2. Environment Setup
 ```bash
@@ -159,8 +159,7 @@ curl -H "Authorization: Bearer <jwt_token>" \
 openssl rand -base64 32
 
 # Update .env with real credentials
-GOOGLE_CLIENT_ID=actual_client_id
-GOOGLE_CLIENT_SECRET=actual_client_secret
+JWT_SECRET=generated_secure_secret
 JWT_SECRET=generated_secure_secret
 ```
 
@@ -173,7 +172,7 @@ JWT_SECRET=generated_secure_secret
 
 - ✅ Domain restriction enforced server-side
 - ✅ ID token signature validation
-- ✅ Minimal OAuth scopes
+- ✅ Email verification system
 - ✅ Short-lived access tokens
 - ✅ Hashed refresh tokens
 - ✅ Secure logout implementation
@@ -187,7 +186,7 @@ JWT_SECRET=generated_secure_secret
 **Files Created**: 15 files  
 **Database Tables**: 1 new table (users)  
 **API Endpoints**: 6 endpoints  
-**Security Features**: Full OAuth + JWT + RBAC
+**Security Features**: Email/Password + JWT + RBAC
 
 **Ready for Phase 2**: Attendance Management System
 

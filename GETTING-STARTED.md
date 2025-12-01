@@ -39,8 +39,7 @@ Edit `.env` file with your credentials:
 
 ```bash
 # Required for Phase 1 (Authentication):
-GOOGLE_CLIENT_ID=your_actual_google_client_id
-GOOGLE_CLIENT_SECRET=your_actual_google_client_secret
+JWT_SECRET=your_secure_jwt_secret
 
 # Required for Phase 2 (SMS):
 SMS_GATEWAY_URL=your_sms_gateway_url
@@ -105,7 +104,7 @@ npm install
 This will install:
 - NestJS framework
 - TypeORM (PostgreSQL)
-- Passport (Google OAuth)
+- Passport (JWT authentication)
 - Bull (async queue)
 - And 20+ other dependencies
 
@@ -133,7 +132,7 @@ docker exec -it mrit-redis redis-cli
 ### Phase 1: Authentication Module (Next)
 
 We'll build:
-1. Google OAuth integration
+1. Email/password authentication
 2. JWT token service
 3. RBAC guards
 4. Auth middleware
@@ -222,7 +221,7 @@ When you're ready for Phase 1, just say:
 
 I'll create:
 - Auth module structure
-- Google OAuth integration
+- Email/password authentication
 - JWT service
 - RBAC guards
 - All necessary entities and DTOs

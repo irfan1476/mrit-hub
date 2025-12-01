@@ -96,7 +96,7 @@ Phase X: Module Name - Status
 **Examples:**
 ```
 Phase 1: Authentication - Complete
-- Google OAuth integration
+- Email/password authentication
 - JWT token service
 - RBAC guards
 

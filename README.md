@@ -20,7 +20,7 @@ A comprehensive, locally-hosted college management system with attendance tracki
 - Complete audit trail
 
 ### 2. Identity Verification & Profile Management
-- Google OAuth authentication
+- Email/password authentication
 - Phone OTP verification
 - Profile photo upload with secure serving
 - Role-based access control
@@ -55,8 +55,7 @@ cd mrit-hub
 ```bash
 cp .env.example .env
 # Edit .env with your credentials:
-# - GOOGLE_CLIENT_ID
-# - GOOGLE_CLIENT_SECRET
+# - JWT_SECRET
 # - SMS_GATEWAY_URL
 # - SMS_GATEWAY_API_KEY
 # - JWT_SECRET
@@ -173,7 +172,7 @@ mrit-hub/
 
 ## 🔐 Security
 
-- Google OAuth for authentication
+- Email/password authentication with JWT tokens
 - JWT tokens for session management
 - Role-based access control (RBAC)
 - Secure file storage with authenticated access
@@ -197,7 +196,7 @@ The system is designed to handle:
 | Database | PostgreSQL 15 | Relational data |
 | ORM | TypeORM | Database abstraction |
 | Cache/Queue | Redis + Bull | Async tasks, SMS |
-| Auth | Passport.js | Google OAuth, JWT |
+| Auth | Passport.js | JWT tokens, Email verification |
 | File Upload | Multer | Profile photos |
 | Reverse Proxy | Nginx | Load balancing, SSL |
 | Containerization | Docker | Deployment |

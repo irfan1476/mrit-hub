@@ -70,7 +70,7 @@ mrit-hub/
 - @nestjs/passport (Authentication)
 - @nestjs/jwt (JWT tokens)
 - @nestjs/bull (Async queue)
-- passport-google-oauth20 (Google OAuth)
+- nodemailer (Email service)
 - multer (File uploads)
 - ioredis (Redis client)
 - bull (Job queue)
@@ -91,7 +91,7 @@ mrit-hub/
 ### Phase 1: Authentication Module
 
 **To Build:**
-1. Google OAuth integration
+1. Email/password authentication
 2. JWT token service
 3. RBAC guards (Student/Faculty/Mentor/HOD/Admin)
 4. Auth middleware
@@ -99,8 +99,8 @@ mrit-hub/
 
 **Endpoints:**
 ```
-POST   /api/v1/auth/google/login
-POST   /api/v1/auth/google/callback
+POST   /api/v1/auth/register
+POST   /api/v1/auth/login
 GET    /api/v1/auth/me
 POST   /api/v1/auth/logout
 POST   /api/v1/auth/refresh
@@ -142,10 +142,9 @@ npm install
 
 Before starting Phase 1, you need:
 
-1. **Google OAuth Credentials**
-   - Go to: https://console.cloud.google.com
-   - Create OAuth 2.0 credentials
-   - Add to .env: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+1. **JWT Secret**
+   - Generate: `openssl rand -base64 32`
+   - Add to .env: JWT_SECRET
 
 2. **SMS Gateway**
    - DLT registration

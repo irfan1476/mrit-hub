@@ -102,7 +102,7 @@ mrit-hub/
 
 **Authentication:**
 - @nestjs/passport, @nestjs/jwt
-- passport, passport-google-oauth20, passport-jwt
+- passport, passport-jwt, nodemailer
 
 **Queue:**
 - @nestjs/bull, bull, ioredis
@@ -123,7 +123,7 @@ mrit-hub/
 
 **To Build:**
 1. Create `src/` directory structure
-2. Implement Google OAuth strategy
+2. Implement email/password authentication
 3. Create JWT service
 4. Build RBAC guards
 5. Create auth endpoints
@@ -191,10 +191,9 @@ docker-compose logs -f
 
 Before Phase 1, obtain:
 
-1. **Google OAuth Credentials**
-   - URL: https://console.cloud.google.com
-   - Create OAuth 2.0 Client ID
-   - Add to `.env`: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+1. **JWT Secret**
+   - Generate secure secret: `openssl rand -base64 32`
+   - Add to `.env`: JWT_SECRET
 
 2. **SMS Gateway (for Phase 2)**
    - DLT registration
