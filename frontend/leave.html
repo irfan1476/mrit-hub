@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Management - MRIT Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        .header { background: #2c3e50; color: white; padding: 1rem; text-align: center; }
+        .nav { background: #34495e; padding: 0.5rem; display: flex; justify-content: center; gap: 1rem; }
+        .nav button { background: #3498db; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .nav button:hover { background: #2980b9; }
+        .nav button.active { background: #e74c3c; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
+        .btn { background: #3498db; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; }
+        .btn:hover { background: #2980b9; }
+        .btn-success { background: #27ae60; }
+        .btn-danger { background: #e74c3c; }
+        .balance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .balance-card { background: #ecf0f1; padding: 1rem; border-radius: 4px; text-align: center; }
+        .status-pending { color: #f39c12; }
+        .status-approved { color: #27ae60; }
+        .status-rejected { color: #e74c3c; }
+        .hidden { display: none; }
+        .mandatory { color: red; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏛️ MRIT Hub - Leave Management System</h1>
+    </div>
+
+    <div class="nav">
+        <button onclick="showSection('apply')" id="btn-apply">APPLY</button>
+        <button onclick="showSection('view')" id="btn-view">VIEW</button>
+        <button onclick="showSection('balance')" id="btn-balance">BALANCE</button>
+        <button onclick="showSection('approve')" id="btn-approve">APPROVE LEAVES</button>
+    </div>
+
+    <div class="container">
+        <!-- Apply Leave Section -->
+        <div id="section-apply" class="card">
+            <h2>Apply for Leave</h2>
+            <p>Fields marked with <span class="mandatory">*</span> are mandatory</p>
+            <form id="apply-form">
+                <div class="form-group">
+                    <label>Leave Type <span class="mandatory">*</span></label>
+                    <select id="leave-type" required>
+                        <option value="">Select Leave Type</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>From Date <span class="mandatory">*</span></label>
+                    <input type="date" id="from-date" required>
+                </div>
+                <div class="form-group">
+                    <label>To Date <span class="mandatory">*</span></label>
+                    <input type="date" id="to-date" required>
+                </div>
+                <div class="form-group">
+                    <label>Total Days <span class="mandatory">*</span></label>
+                    <input type="number" id="total-days" step="0.5" min="0.5" required readonly>
+                </div>
+                <div class="form-group">
+                    <label>Reason <span class="mandatory">*</span></label>
+                    <textarea id="reason" rows="3" required></textarea>
+                </div>
+                <div class="form-group" id="substitute-group">
+                    <label>Substitute Teacher</label>
+                    <select id="substitute-teacher">
+                        <option value="">Select Substitute</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">Submit Application</button>
+            </form>
+        </div>
+
+        <!-- View Applications Section -->
+        <div id="section-view" class="card hidden">
+            <h2>My Leave Applications</h2>
+            <div id="applications-list"></div>
+        </div>
+
+        <!-- Balance Section -->
+        <div id="section-balance" class="card hidden">
+            <h2>Leave Balance</h2>
+            <div id="balance-grid" class="balance-grid"></div>
+        </div>
+
+        <!-- Approve Leaves Section -->
+        <div id="section-approve" class="card hidden">
+            <h2>Approve Leaves</h2>
+            <div class="nav" style="background: #ecf0f1; margin-bottom: 1rem;">
+                <button onclick="showApprovals('substitute')" id="btn-sub-approvals">SUBSTITUTE APPROVALS</button>
+                <button onclick="showApprovals('hod')" id="btn-hod-approvals">HOD APPROVALS</button>
+            </div>
+            <div id="substitute-approvals"></div>
+            <div id="hod-approvals" class="hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        let authToken = localStorage.getItem('authToken') || 'dummy-token';
+
+        // Show/hide sections
+        function showSection(section) {
+            document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="btn-"]').forEach(el => el.classList.remove('active'));
+            
+            document.getElementById(`section-${section}`).classList.remove('hidden');
+            document.getElementById(`btn-${section}`).classList.add('active');
+
+            if (section === 'apply') loadLeaveTypes();
+            if (section === 'view') loadMyApplications();
+            if (section === 'balance') loadLeaveBalances();
+            if (section === 'approve') loadPendingApprovals();
+        }
+
+        function showApprovals(type) {
+            document.getElementById('substitute-approvals').classList.toggle('hidden', type !== 'substitute');
+            document.getElementById('hod-approvals').classList.toggle('hidden', type !== 'hod');
+            document.getElementById('btn-sub-approvals').classList.toggle('active', type === 'substitute');
+            document.getElementById('btn-hod-approvals').classList.toggle('active', type === 'hod');
+        }
+
+        // Calculate total days
+        function calculateDays() {
+            const fromDate = new Date(document.getElementById('from-date').value);
+            const toDate = new Date(document.getElementById('to-date').value);
+            
+            if (fromDate && toDate && fromDate <= toDate) {
+                const diffTime = Math.abs(toDate - fromDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                document.getElementById('total-days').value = diffDays;
+            }
+        }
+
+        // Load leave types
+        async function loadLeaveTypes() {
+            try {
+                const response = await fetch(`${API_BASE}/leave/types`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const types = await response.json();
+                
+                const select = document.getElementById('leave-type');
+                select.innerHTML = '<option value="">Select Leave Type</option>';
+                types.forEach(type => {
+                    select.innerHTML += `<option value="${type.id}" data-substitute="${type.requires_substitute}">${type.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading leave types:', error);
+            }
+        }
+
+        // Load applications
+        async function loadMyApplications() {
+            try {
+                const response = await fetch(`${API_BASE}/leave/my-applications`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const applications = await response.json();
+                
+                const container = document.getElementById('applications-list');
+                container.innerHTML = applications.map(app => `
+                    <div class="card" style="margin-bottom: 1rem;">
+                        <h4>${app.leave_type.name}</h4>
+                        <p><strong>Dates:</strong> ${app.from_date} to ${app.to_date} (${app.total_days} days)</p>
+                        <p><strong>Reason:</strong> ${app.reason}</p>
+                        <p><strong>Status:</strong> <span class="status-${app.status.toLowerCase()}">${app.status}</span></p>
+                        <p><strong>Applied:</strong> ${new Date(app.created_at).toLocaleDateString()}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading applications:', error);
+            }
+        }
+
+        // Load balances
+        async function loadLeaveBalances() {
+            try {
+                const response = await fetch(`${API_BASE}/leave/balance`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+                const balances = await response.json();
+                
+                const container = document.getElementById('balance-grid');
+                container.innerHTML = balances.map(balance => `
+                    <div class="balance-card">
+                        <h4>${balance.leave_type.name}</h4>
+                        <p><strong>Used:</strong> ${balance.used_days}</p>
+                        <p><strong>Remaining:</strong> ${balance.remaining_days}</p>
+                        <p><strong>Total:</strong> ${balance.opening_balance}</p>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading balances:', error);
+            }
+        }
+
+        // Load pending approvals
+        async function loadPendingApprovals() {
+            // Mock data for now
+            document.getElementById('substitute-approvals').innerHTML = `
+                <div class="card">
+                    <h4>Casual Leave - John Doe</h4>
+                    <p><strong>Dates:</strong> 2025-01-15 to 2025-01-16 (2 days)</p>
+                    <p><strong>Reason:</strong> Personal work</p>
+                    <button class="btn btn-success">Approve</button>
+                    <button class="btn btn-danger">Reject</button>
+                </div>
+            `;
+        }
+
+        // Event listeners
+        document.getElementById('from-date').addEventListener('change', calculateDays);
+        document.getElementById('to-date').addEventListener('change', calculateDays);
+
+        document.getElementById('leave-type').addEventListener('change', function() {
+            const selected = this.options[this.selectedIndex];
+            const requiresSubstitute = selected.dataset.substitute === 'true';
+            document.getElementById('substitute-group').style.display = requiresSubstitute ? 'block' : 'none';
+        });
+
+        document.getElementById('apply-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                leave_type_id: parseInt(document.getElementById('leave-type').value),
+                from_date: document.getElementById('from-date').value,
+                to_date: document.getElementById('to-date').value,
+                total_days: parseFloat(document.getElementById('total-days').value),
+                reason: document.getElementById('reason').value,
+                substitute_faculty_id: document.getElementById('substitute-teacher').value || null
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/leave/apply`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    alert('Leave application submitted successfully!');
+                    this.reset();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.message || 'Failed to submit application'));
+                }
+            } catch (error) {
+                console.error('Error submitting application:', error);
+                alert('Error submitting application');
+            }
+        });
+
+        // Initialize
+        showSection('apply');
+    </script>
+</body>
+</html>

@@ -31,7 +31,14 @@ A comprehensive, locally-hosted college management system with attendance tracki
 - Department and section-wise filtering
 - HOD dashboards
 
-### 4. Account Request System
+### 4. Leave Management System (LMS) - Faculty & Staff Only
+- Faculty/staff leave application workflow
+- Two-stage approval (Substitute → HOD)
+- Real-time leave balance tracking
+- 9 configurable leave types
+- Complete audit trail
+
+### 5. Account Request System
 - Workspace password reset workflows
 - Ticket tracking
 - Email notifications
@@ -76,7 +83,7 @@ docker-compose ps
 5. **Check database**:
 ```bash
 docker exec -it mrit-postgres psql -U mrit_admin -d mrit_hub -c "\dt"
-# Should list 27 tables
+# Should list 34 tables
 ```
 
 ### Access Points
@@ -89,26 +96,31 @@ docker exec -it mrit-postgres psql -U mrit_admin -d mrit_hub -c "\dt"
 ## 📊 Database
 
 ### Schema
-- **27 tables** covering students, faculty, courses, attendance, and notifications
+- **34 tables** covering students, faculty, courses, attendance, leave management, and notifications
 - Complete relational model with proper indexes
 - Automatic timestamps and audit triggers
+- Foreign key constraints ensuring data integrity
 
 ### Seed Data
 Initial data includes:
-- Departments (CSE, ECE, ME, etc.)
-- Schemes (2015, 2017, 2018, 2021, 2022)
-- Semesters (1-8)
-- Sections (A, B, C, D)
-- Academic years
-- Sample faculty and SMS templates
+- **10 Departments** (CSE, ECE, ME, CE, etc.)
+- **5 Academic Schemes** (2015, 2017, 2018, 2021, 2022)
+- **8 Semesters** (1-8)
+- **4 Sections** (A, B, C, D)
+- **Academic years** and financial years
+- **Sample faculty** and student data
+- **SMS templates** for notifications
+- **9 Leave types** with MRIT policies
+- **Time slots** for attendance management
 
 ## 🔧 Development
 
 ### Current Status
 - ✅ Phase 0: Foundation Complete
 - ✅ Phase 1: Authentication Module Complete
-- ⏳ Phase 2: Attendance Management (Next)
-- ⏳ Phase 3-6: Pending
+- ✅ Phase 2: Attendance Management Complete
+- ✅ Phase 3: Leave Management System Complete
+- ⏳ Phase 4-6: Pending
 
 ### Install backend dependencies:
 ```bash
@@ -152,15 +164,20 @@ mrit-hub/
 │   └── tsconfig.json          # TypeScript config
 ├── database/
 │   ├── init/
-│   │   ├── 01-schema.sql     # 27 tables
+│   │   ├── 01-schema.sql     # Core 27 tables
 │   │   └── 02-seed.sql       # Master data
-│   └── migrations/            # Future migrations
+│   └── migrations/            # Schema updates
+│       ├── 003-006-*.sql     # Attendance system
+│       ├── 007-*.sql         # Leave management
+│       └── 008-009-*.sql     # Seed data
 ├── nginx/
 │   └── nginx.conf             # Reverse proxy
 ├── docs/
-│   ├── DATABASE-ERD.md        # Schema documentation
-│   ├── PHASE-0-COMPLETE.md    # Phase summary
-│   └── GITHUB-SETUP.md        # Git guide
+│   ├── DATABASE-ERD-COMPLETE.md    # Complete schema & ERD
+│   ├── PHASE-0-COMPLETE.md         # Phase 0 summary
+│   ├── PHASE-2-ATTENDANCE-COMPLETE.md # Attendance system
+│   ├── LEAVE-MANAGEMENT-COMPLETE.md   # Leave management
+│   └── GITHUB-SETUP.md             # Git workflow
 ├── docker-compose.yml         # 4 services
 ├── .env.example               # Environment template
 ├── start.sh                   # Quick start script
@@ -207,7 +224,7 @@ The system is designed to handle:
 - **GETTING-STARTED.md**: Quick start guide
 - **QUICK-REFERENCE.md**: Common commands
 - **STATUS.md**: Progress tracker
-- **docs/DATABASE-ERD.md**: Complete schema
+- **docs/DATABASE-ERD-COMPLETE.md**: Complete schema & ERD
 - **docs/PHASE-0-COMPLETE.md**: Foundation details
 - **GITHUB-SETUP.md**: Git workflow
 
@@ -231,13 +248,14 @@ npm run test:cov
 |-------|--------|--------|----------|
 | Phase 0 | Foundation Setup | ✅ Complete | 1 day |
 | Phase 1 | Authentication | ✅ Complete | 4-6 hours |
-| Phase 2 | Attendance System | ⏳ Pending | 5 days |
-| Phase 3 | Identity Verification | ⏳ Pending | 2 days |
-| Phase 4 | SIS-lite | ⏳ Pending | 1 day |
-| Phase 5 | Account Requests | ⏳ Pending | 1 day |
-| Phase 6 | Deployment | ⏳ Pending | 2 days |
+| Phase 2 | Attendance System | ✅ Complete | 5 days |
+| Phase 3 | Leave Management | ✅ Complete | 2 hours |
+| Phase 4 | Identity Verification | ⏳ Pending | 2 days |
+| Phase 5 | SIS-lite | ⏳ Pending | 1 day |
+| Phase 6 | Account Requests | ⏳ Pending | 1 day |
+| Phase 7 | Deployment | ⏳ Pending | 2 days |
 
-**Overall Progress**: 25% (3/12 days)
+**Overall Progress**: 60% (7/12 days)
 
 ## 🐛 Troubleshooting
 
@@ -295,6 +313,6 @@ Proprietary - MRIT Internal Use Only
 
 ---
 
-**Current Status**: ✅ Phase 1 Complete - Authentication Ready  
-**Next Step**: Phase 2 - Attendance Management System  
+**Current Status**: ✅ Phase 3 Complete - Leave Management Ready  
+**Next Step**: Phase 4 - Identity Verification System  
 **Repository**: https://github.com/irfan1476/mrit-hub

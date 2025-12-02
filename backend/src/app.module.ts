@@ -6,6 +6,7 @@ import { UsersModule } from './modules/users/users.module';
 import { EmailModule } from './modules/email/email.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SmsModule } from './modules/sms/sms.module';
+import { LeaveModule } from './modules/leave/leave.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -25,6 +26,7 @@ import { AppController } from './app.controller';
     EmailModule,
     SmsModule,
     AttendanceModule,
+    LeaveModule,
   ],
   controllers: [AppController],
 })
