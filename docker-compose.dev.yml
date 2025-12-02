@@ -14,10 +14,10 @@ services:
       - "5432:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U mrit_admin -d mrit_hub"]
-      interval: 5s
-      timeout: 3s
-      retries: 3
-      start_period: 10s
+      interval: 3s
+      timeout: 2s
+      retries: 2
+      start_period: 5s
     networks:
       - mrit-network
 
@@ -31,24 +31,20 @@ services:
       - "6379:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 2s
-      retries: 3
-      start_period: 5s
+      interval: 3s
+      timeout: 1s
+      retries: 2
+      start_period: 3s
     networks:
       - mrit-network
 
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: development
-    container_name: mrit-backend
-    restart: unless-stopped
+  # Fast development backend (no build, direct node)
+  backend-dev:
+    image: node:20-alpine
+    container_name: mrit-backend-dev
+    working_dir: /app
     volumes:
-      - ./backend/src:/app/src
-      - ./backend/package.json:/app/package.json
-      - profile_photos:/app/uploads/profile_photos
+      - ./backend:/app
       - backend_node_modules:/app/node_modules
     environment:
       NODE_ENV: development
@@ -56,13 +52,9 @@ services:
       DATABASE_URL: postgresql://mrit_admin:${DB_PASSWORD:-mrit_secure_pass_2024}@postgres:5432/mrit_hub
       REDIS_URL: redis://redis:6379
       JWT_SECRET: ${JWT_SECRET:-mrit_jwt_secret_change_in_production}
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-      GOOGLE_CALLBACK_URL: ${GOOGLE_CALLBACK_URL:-http://localhost:3000/api/v1/auth/google/callback}
-      SMS_GATEWAY_URL: ${SMS_GATEWAY_URL}
-      SMS_GATEWAY_API_KEY: ${SMS_GATEWAY_API_KEY}
     ports:
       - "3000:3000"
+    command: sh -c "npm install && npm run start:dev"
     depends_on:
       postgres:
         condition: service_healthy
@@ -71,26 +63,10 @@ services:
     networks:
       - mrit-network
 
-  nginx:
-    image: nginx:alpine
-    container_name: mrit-nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - backend
-    networks:
-      - mrit-network
-
 volumes:
   postgres_data:
     driver: local
   redis_data:
-    driver: local
-  profile_photos:
     driver: local
   backend_node_modules:
     driver: local

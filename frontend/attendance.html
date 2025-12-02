@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendance - MRIT Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f7fa; }
+        
+        .header { background: #2563eb; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; }
+        .user-info { display: flex; align-items: center; gap: 1rem; }
+        
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+        
+        .filters { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; }
+        .filter-row { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; }
+        .filter-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .filter-group label { font-weight: 500; color: #374151; }
+        .filter-group select, .filter-group input { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; }
+        
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-success { background: #059669; color: white; }
+        
+        .session-info { background: #fef3c7; padding: 1rem; border-radius: 4px; margin-bottom: 1rem; border-left: 4px solid #f59e0b; }
+        
+        .attendance-table { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .table-header { background: #1f2937; color: white; padding: 1rem; display: grid; grid-template-columns: 60px 120px 1fr 120px 100px 100px; gap: 1rem; align-items: center; font-weight: 500; }
+        .table-row { padding: 1rem; display: grid; grid-template-columns: 60px 120px 1fr 120px 100px 100px; gap: 1rem; align-items: center; border-bottom: 1px solid #e5e7eb; }
+        .table-row:hover { background: #f9fafb; }
+        
+        .toggle { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .toggle input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #dc2626; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #059669; }
+        input:checked + .slider:before { transform: translateX(26px); }
+        
+        .status-present { color: #059669; font-weight: 500; }
+        .status-absent { color: #dc2626; font-weight: 500; }
+        
+        .summary { display: flex; gap: 1rem; margin-bottom: 2rem; }
+        .summary-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; }
+        .summary-number { font-size: 2rem; font-weight: bold; color: #2563eb; }
+        .summary-label { color: #6b7280; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MRIT Hub - Attendance</h1>
+        <div class="user-info">
+            <span id="userEmail"></span>
+            <button class="btn btn-primary" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filters">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label>Date</label>
+                    <input type="date" id="sessionDate" value="">
+                </div>
+                <div class="filter-group">
+                    <label>Department</label>
+                    <select id="department">
+                        <option value="CSE">CSE</option>
+                        <option value="ECE">ECE</option>
+                        <option value="ME">ME</option>
+                        <option value="CE">CE</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Semester</label>
+                    <select id="semester">
+                        <option value="3">3rd Sem</option>
+                        <option value="5">5th Sem</option>
+                        <option value="7">7th Sem</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Section</label>
+                    <select id="section">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Subject</label>
+                    <select id="subject">
+                        <option value="B1">Project Management with Git</option>
+                        <option value="B2">Data Structures</option>
+                        <option value="B3">Database Systems</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Time Slot</label>
+                    <select id="timeSlot">
+                        <option value="12:30 pm - MRIT Hour Group">12:30 pm - MRIT Hour Group</option>
+                        <option value="09:00 am - Period 1">09:00 am - Period 1</option>
+                        <option value="10:00 am - Period 2">10:00 am - Period 2</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="createSession()">Create Session</button>
+            </div>
+        </div>
+
+        <div id="sessionInfo" class="session-info" style="display: none;">
+            <strong>Session Created:</strong> <span id="sessionDetails"></span>
+        </div>
+
+        <div class="summary">
+            <div class="summary-card">
+                <div class="summary-number" id="totalStudents">0</div>
+                <div class="summary-label">Total Students</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number" id="presentCount">0</div>
+                <div class="summary-label">Present</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-number" id="absentCount">0</div>
+                <div class="summary-label">Absent</div>
+            </div>
+        </div>
+
+        <div class="attendance-table">
+            <div class="table-header">
+                <div>S.No</div>
+                <div>Roll No</div>
+                <div>Name</div>
+                <div>Admission No</div>
+                <div>Marker</div>
+                <div>Status</div>
+            </div>
+            <div id="studentList">
+                <!-- Students will be loaded here -->
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn btn-success" onclick="submitAttendance()">Submit Attendance</button>
+        </div>
+    </div>
+
+    <script>
+        let currentSession = null;
+        let students = [];
+
+        // Set today's date
+        document.getElementById('sessionDate').value = new Date().toISOString().split('T')[0];
+
+        // Load user info
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        // Load time slots on page load
+        loadTimeSlots();
+
+        async function createSession() {
+            const sessionData = {
+                subject_code: document.getElementById('subject').value,
+                department: document.getElementById('department').value,
+                semester: parseInt(document.getElementById('semester').value),
+                section: document.getElementById('section').value,
+                session_date: document.getElementById('sessionDate').value,
+                time_slot: document.getElementById('timeSlot').value,
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/attendance/session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(sessionData)
+                });
+
+                if (!response.ok) throw new Error('Failed to create session');
+                
+                currentSession = await response.json();
+                
+                document.getElementById('sessionInfo').style.display = 'block';
+                document.getElementById('sessionDetails').textContent = 
+                    `${sessionData.session_date} - ${sessionData.department} ${sessionData.semester} Sem ${sessionData.section} - ${sessionData.subject_code}`;
+
+                await loadStudents();
+            } catch (error) {
+                alert('Error creating session: ' + error.message);
+            }
+        }
+
+        async function loadStudents() {
+            const params = new URLSearchParams({
+                department: document.getElementById('department').value,
+                semester: document.getElementById('semester').value,
+                section: document.getElementById('section').value,
+                subject_code: document.getElementById('subject').value
+            });
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/v1/attendance/students?${params}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load students');
+                
+                const studentData = await response.json();
+                students = studentData.map(s => ({ ...s, status: 'PRESENT' }));
+                renderStudents();
+                updateSummary();
+            } catch (error) {
+                alert('Error loading students: ' + error.message);
+            }
+        }
+
+        async function loadTimeSlots() {
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/attendance/time-slots', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (!response.ok) throw new Error('Failed to load time slots');
+                
+                const timeSlots = await response.json();
+                const select = document.getElementById('timeSlot');
+                select.innerHTML = timeSlots.map(slot => 
+                    `<option value="${slot.slot_name}">${slot.slot_name} (${slot.duration_hours}h ${slot.slot_type})</option>`
+                ).join('');
+            } catch (error) {
+                console.error('Error loading time slots:', error);
+            }
+        }
+
+        function renderStudents() {
+            const container = document.getElementById('studentList');
+            container.innerHTML = students.map((student, index) => `
+                <div class="table-row">
+                    <div>${index + 1}</div>
+                    <div>${student.rollNo}</div>
+                    <div>${student.name}</div>
+                    <div>${student.admissionNo}</div>
+                    <div>
+                        <label class="toggle">
+                            <input type="checkbox" ${student.status === 'PRESENT' ? 'checked' : ''} 
+                                   onchange="toggleAttendance('${student.id}')">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="${student.status === 'PRESENT' ? 'status-present' : 'status-absent'}">
+                        ${student.status === 'PRESENT' ? 'Present' : 'Absent'}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function toggleAttendance(studentId) {
+            const student = students.find(s => s.id === studentId);
+            student.status = student.status === 'PRESENT' ? 'ABSENT' : 'PRESENT';
+            renderStudents();
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const total = students.length;
+            const present = students.filter(s => s.status === 'PRESENT').length;
+            const absent = total - present;
+
+            document.getElementById('totalStudents').textContent = total;
+            document.getElementById('presentCount').textContent = present;
+            document.getElementById('absentCount').textContent = absent;
+        }
+
+        async function submitAttendance() {
+            if (!currentSession) {
+                alert('Please create a session first');
+                return;
+            }
+
+            const attendanceData = {
+                session_id: currentSession.id.toString(),
+                attendance_records: students.map(s => ({
+                    student_id: s.id,
+                    status: s.status
+                }))
+            };
+
+            try {
+                const response = await fetch('http://localhost:3000/api/v1/attendance/mark', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(attendanceData)
+                });
+
+                if (!response.ok) throw new Error('Failed to submit attendance');
+                
+                alert('Attendance submitted successfully!');
+            } catch (error) {
+                alert('Error submitting attendance: ' + error.message);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            window.location.href = 'index.html';
+        }
+
+        // Load user email
+        fetch('http://localhost:3000/api/v1/auth/me', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('userEmail').textContent = data.email;
+        })
+        .catch(() => {
+            window.location.href = 'index.html';
+        });
+    </script>
+</body>
+</html>

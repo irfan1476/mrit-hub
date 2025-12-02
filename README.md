@@ -241,11 +241,26 @@ npm run test:cov
 
 ## 🐛 Troubleshooting
 
+### Quick Error Check
+```bash
+./monitor-errors.sh  # Check all services for errors
+```
+
 ### Services won't start
 ```bash
 docker-compose down
 docker-compose up -d
 docker-compose logs
+```
+
+### TypeScript compilation errors
+```bash
+docker-compose logs backend | grep -i error
+```
+
+### Database errors
+```bash
+docker-compose logs postgres | grep ERROR
 ```
 
 ### Port conflicts
@@ -255,6 +270,11 @@ Edit `docker-compose.yml` and change port mappings
 ```bash
 docker-compose restart postgres
 docker-compose logs postgres
+```
+
+### API not responding
+```bash
+curl http://localhost:3000/api/v1/health
 ```
 
 ### Clear all data (CAUTION)
