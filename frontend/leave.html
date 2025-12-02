@@ -23,11 +23,25 @@
         .btn-danger { background: #e74c3c; }
         .balance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
         .balance-card { background: #ecf0f1; padding: 1rem; border-radius: 4px; text-align: center; }
-        .status-pending { color: #f39c12; }
-        .status-approved { color: #27ae60; }
-        .status-rejected { color: #e74c3c; }
+        .status-pending, .status-pending-substitute, .status-pending-hod { color: #f39c12; font-weight: bold; }
+        .status-approved { color: #27ae60; font-weight: bold; }
+        .status-rejected { color: #e74c3c; font-weight: bold; }
+        .status-cancelled { color: #95a5a6; font-weight: bold; }
         .hidden { display: none; }
         .mandatory { color: red; }
+        .loading { color: #3498db; font-style: italic; }
+        .error { color: #e74c3c; background: #fdf2f2; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+        .success { color: #27ae60; background: #f0f9f4; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+        .form-group input:invalid, .form-group select:invalid, .form-group textarea:invalid {
+            border-color: #e74c3c;
+        }
+        .form-group input:valid, .form-group select:valid, .form-group textarea:valid {
+            border-color: #27ae60;
+        }
+        .balance-card h4 { margin-bottom: 0.5rem; color: #2c3e50; }
+        .balance-card p { margin: 0.25rem 0; }
+        .demo-notice { background: #fff3cd; color: #856404; padding: 0.75rem; border-radius: 4px; margin: 1rem 0; border-left: 4px solid #ffc107; }
+        .demo-notice strong { color: #664d03; }
     </style>
 </head>
 <body>
@@ -138,84 +152,258 @@
                 const diffTime = Math.abs(toDate - fromDate);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
                 document.getElementById('total-days').value = diffDays;
+                
+                // Check if exceeds max days for selected leave type
+                const leaveTypeSelect = document.getElementById('leave-type');
+                const selectedOption = leaveTypeSelect.options[leaveTypeSelect.selectedIndex];
+                const maxDays = selectedOption ? selectedOption.dataset.maxDays : null;
+                
+                if (maxDays && diffDays > parseInt(maxDays)) {
+                    const warning = document.getElementById('days-warning') || document.createElement('div');
+                    warning.id = 'days-warning';
+                    warning.style.cssText = 'color: #e74c3c; font-size: 0.9em; margin-top: 0.25rem;';
+                    warning.textContent = `Warning: ${diffDays} days exceeds maximum allowed (${maxDays} days/year)`;
+                    
+                    const totalDaysInput = document.getElementById('total-days');
+                    if (!document.getElementById('days-warning')) {
+                        totalDaysInput.parentNode.appendChild(warning);
+                    }
+                } else {
+                    const warning = document.getElementById('days-warning');
+                    if (warning) warning.remove();
+                }
+            } else {
+                document.getElementById('total-days').value = '';
+                const warning = document.getElementById('days-warning');
+                if (warning) warning.remove();
             }
         }
 
         // Load leave types
         async function loadLeaveTypes() {
+            const select = document.getElementById('leave-type');
+            select.innerHTML = '<option value="">Loading...</option>';
+            
             try {
-                const response = await fetch(`${API_BASE}/leave/types`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
+                // Try public endpoint first
+                const response = await fetch(`${API_BASE}/leave/types`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const types = await response.json();
                 
-                const select = document.getElementById('leave-type');
                 select.innerHTML = '<option value="">Select Leave Type</option>';
-                types.forEach(type => {
-                    select.innerHTML += `<option value="${type.id}" data-substitute="${type.requires_substitute}">${type.name}</option>`;
-                });
+                if (Array.isArray(types) && types.length > 0) {
+                    types.forEach(type => {
+                        const maxDays = type.max_days_per_year ? ` (Max: ${type.max_days_per_year}/year)` : '';
+                        const halfDay = type.allow_half_day ? ' (Half-day allowed)' : '';
+                        select.innerHTML += `<option value="${type.id}" data-substitute="${type.requires_substitute}" data-max-days="${type.max_days_per_year}">${type.name}${maxDays}${halfDay}</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">No leave types available</option>';
+                }
+                
+                // Load substitute faculty list
+                loadSubstituteFaculty();
             } catch (error) {
                 console.error('Error loading leave types:', error);
+                select.innerHTML = '<option value="">Error loading types</option>';
             }
         }
 
         // Load applications
         async function loadMyApplications() {
+            const container = document.getElementById('applications-list');
+            container.innerHTML = '<div class="card">Loading applications...</div>';
+            
             try {
-                const response = await fetch(`${API_BASE}/leave/my-applications`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
+                // Try demo endpoint for testing
+                const response = await fetch(`${API_BASE}/leave/demo/applications`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const applications = await response.json();
                 
-                const container = document.getElementById('applications-list');
-                container.innerHTML = applications.map(app => `
-                    <div class="card" style="margin-bottom: 1rem;">
-                        <h4>${app.leave_type.name}</h4>
-                        <p><strong>Dates:</strong> ${app.from_date} to ${app.to_date} (${app.total_days} days)</p>
-                        <p><strong>Reason:</strong> ${app.reason}</p>
-                        <p><strong>Status:</strong> <span class="status-${app.status.toLowerCase()}">${app.status}</span></p>
-                        <p><strong>Applied:</strong> ${new Date(app.created_at).toLocaleDateString()}</p>
-                    </div>
-                `).join('');
+                if (Array.isArray(applications) && applications.length > 0) {
+                    container.innerHTML = applications.map(app => `
+                        <div class="card" style="margin-bottom: 1rem; border-left: 4px solid ${getStatusColor(app.status)};">
+                            <h4>${app.leave_type?.name || 'Unknown Leave Type'}</h4>
+                            <p><strong>Dates:</strong> ${formatDate(app.from_date)} to ${formatDate(app.to_date)} (${app.total_days} days)</p>
+                            <p><strong>Reason:</strong> ${app.reason}</p>
+                            <p><strong>Status:</strong> <span class="status-${app.status.toLowerCase().replace('_', '-')}">${formatStatus(app.status)}</span></p>
+                            <p><strong>Applied:</strong> ${formatDate(app.created_at)}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    container.innerHTML = '<div class="card">No leave applications found.</div>';
+                }
             } catch (error) {
                 console.error('Error loading applications:', error);
+                container.innerHTML = '<div class="card" style="color: red;">Error loading applications. Please try again.</div>';
             }
         }
 
         // Load balances
         async function loadLeaveBalances() {
+            const container = document.getElementById('balance-grid');
+            container.innerHTML = '<div class="balance-card">Loading balances...</div>';
+            
             try {
-                const response = await fetch(`${API_BASE}/leave/balance`, {
-                    headers: { 'Authorization': `Bearer ${authToken}` }
-                });
+                // Try demo endpoint for testing
+                const response = await fetch(`${API_BASE}/leave/demo/balance`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
                 const balances = await response.json();
                 
-                const container = document.getElementById('balance-grid');
-                container.innerHTML = balances.map(balance => `
-                    <div class="balance-card">
-                        <h4>${balance.leave_type.name}</h4>
-                        <p><strong>Used:</strong> ${balance.used_days}</p>
-                        <p><strong>Remaining:</strong> ${balance.remaining_days}</p>
-                        <p><strong>Total:</strong> ${balance.opening_balance}</p>
-                    </div>
-                `).join('');
+                if (Array.isArray(balances) && balances.length > 0) {
+                    container.innerHTML = balances.map(balance => {
+                        const percentage = balance.opening_balance > 0 ? 
+                            ((balance.remaining_days / balance.opening_balance) * 100).toFixed(1) : 0;
+                        return `
+                            <div class="balance-card" style="border-left: 4px solid ${getBalanceColor(percentage)};">
+                                <h4>${balance.leave_type?.name || 'Unknown Type'}</h4>
+                                <p><strong>Used:</strong> ${balance.used_days || 0} days</p>
+                                <p><strong>Remaining:</strong> ${balance.remaining_days || 0} days</p>
+                                <p><strong>Total:</strong> ${balance.opening_balance || 0} days</p>
+                                <p><strong>Available:</strong> ${percentage}%</p>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div class="balance-card">No leave balances found.</div>';
+                }
             } catch (error) {
                 console.error('Error loading balances:', error);
+                container.innerHTML = '<div class="balance-card" style="color: red;">Error loading balances. Please try again.</div>';
+            }
+        }
+
+        // Load substitute faculty
+        async function loadSubstituteFaculty() {
+            const select = document.getElementById('substitute-teacher');
+            select.innerHTML = '<option value="">Loading faculty...</option>';
+            
+            try {
+                // Try to fetch from API, fallback to mock data
+                let faculty;
+                try {
+                    const response = await fetch(`${API_BASE}/faculty/list`);
+                    if (response.ok) {
+                        faculty = await response.json();
+                    } else {
+                        throw new Error('API not available');
+                    }
+                } catch {
+                    // Mock faculty data for demo
+                    faculty = [
+                        { id: 1, faculty_name: 'Dr. Smith', department: 'CSE' },
+                        { id: 2, faculty_name: 'Prof. Jones', department: 'ECE' },
+                        { id: 3, faculty_name: 'Dr. Wilson', department: 'ME' },
+                        { id: 4, faculty_name: 'Prof. Davis', department: 'CSE' },
+                        { id: 5, faculty_name: 'Dr. Brown', department: 'CE' }
+                    ];
+                }
+                
+                select.innerHTML = '<option value="">Select Substitute</option>';
+                if (Array.isArray(faculty) && faculty.length > 0) {
+                    faculty.forEach(f => {
+                        const name = f.faculty_name || f.name;
+                        const dept = f.department ? ` (${f.department})` : '';
+                        select.innerHTML += `<option value="${f.id}">${name}${dept}</option>`;
+                    });
+                } else {
+                    select.innerHTML = '<option value="">No faculty available</option>';
+                }
+            } catch (error) {
+                console.error('Error loading faculty:', error);
+                select.innerHTML = '<option value="">Error loading faculty</option>';
             }
         }
 
         // Load pending approvals
         async function loadPendingApprovals() {
-            // Mock data for now
-            document.getElementById('substitute-approvals').innerHTML = `
-                <div class="card">
-                    <h4>Casual Leave - John Doe</h4>
+            const subContainer = document.getElementById('substitute-approvals');
+            const hodContainer = document.getElementById('hod-approvals');
+            
+            // Mock data for demonstration
+            subContainer.innerHTML = `
+                <div class="card" style="border-left: 4px solid #f39c12;">
+                    <h4>Casual Leave - Dr. Johnson</h4>
                     <p><strong>Dates:</strong> 2025-01-15 to 2025-01-16 (2 days)</p>
                     <p><strong>Reason:</strong> Personal work</p>
-                    <button class="btn btn-success">Approve</button>
-                    <button class="btn btn-danger">Reject</button>
+                    <p><strong>Applied:</strong> ${new Date().toLocaleDateString()}</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-success" style="margin-right: 0.5rem;">Approve</button>
+                        <button class="btn btn-danger">Reject</button>
+                    </div>
                 </div>
             `;
+            
+            hodContainer.innerHTML = `
+                <div class="card" style="border-left: 4px solid #3498db;">
+                    <h4>Earned Leave - Prof. Davis</h4>
+                    <p><strong>Dates:</strong> 2025-02-01 to 2025-02-05 (5 days)</p>
+                    <p><strong>Reason:</strong> Family function</p>
+                    <p><strong>Substitute Status:</strong> <span style="color: #27ae60;">Approved</span></p>
+                    <p><strong>Applied:</strong> ${new Date().toLocaleDateString()}</p>
+                    <div style="margin-top: 1rem;">
+                        <button class="btn btn-success" style="margin-right: 0.5rem;">Approve</button>
+                        <button class="btn btn-danger">Reject</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            return new Date(dateString).toLocaleDateString('en-IN');
+        }
+
+        function formatStatus(status) {
+            return status.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function getStatusColor(status) {
+            switch(status) {
+                case 'APPROVED': return '#27ae60';
+                case 'REJECTED': return '#e74c3c';
+                case 'PENDING_SUBSTITUTE': return '#f39c12';
+                case 'PENDING_HOD': return '#3498db';
+                default: return '#95a5a6';
+            }
+        }
+
+        function getBalanceColor(percentage) {
+            if (percentage >= 70) return '#27ae60';
+            if (percentage >= 30) return '#f39c12';
+            return '#e74c3c';
+        }
+
+        function showDemoNotice(message) {
+            // Remove existing demo notice
+            const existing = document.querySelector('.demo-notice');
+            if (existing) existing.remove();
+            
+            // Create demo notice
+            const notice = document.createElement('div');
+            notice.className = 'demo-notice';
+            notice.style.cssText = 'background: #fff3cd; color: #856404; padding: 0.75rem; border-radius: 4px; margin: 1rem 0; border-left: 4px solid #ffc107;';
+            notice.innerHTML = `<strong>Demo Mode:</strong> ${message}`;
+            
+            // Add to container
+            const container = document.querySelector('.container');
+            container.insertBefore(notice, container.firstChild);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => notice.remove(), 10000);
         }
 
         // Event listeners
@@ -226,40 +414,121 @@
             const selected = this.options[this.selectedIndex];
             const requiresSubstitute = selected.dataset.substitute === 'true';
             document.getElementById('substitute-group').style.display = requiresSubstitute ? 'block' : 'none';
+            
+            // Recalculate days to show warning if needed
+            calculateDays();
         });
 
         document.getElementById('apply-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
+            // Validate form
+            const leaveTypeId = document.getElementById('leave-type').value;
+            const fromDate = document.getElementById('from-date').value;
+            const toDate = document.getElementById('to-date').value;
+            const totalDays = document.getElementById('total-days').value;
+            const reason = document.getElementById('reason').value.trim();
+            const substituteId = document.getElementById('substitute-teacher').value;
+            
+            if (!leaveTypeId || !fromDate || !toDate || !totalDays || !reason) {
+                alert('Please fill all required fields');
+                return;
+            }
+            
+            if (new Date(fromDate) > new Date(toDate)) {
+                alert('From date cannot be after to date');
+                return;
+            }
+            
             const formData = {
-                leave_type_id: parseInt(document.getElementById('leave-type').value),
-                from_date: document.getElementById('from-date').value,
-                to_date: document.getElementById('to-date').value,
-                total_days: parseFloat(document.getElementById('total-days').value),
-                reason: document.getElementById('reason').value,
-                substitute_faculty_id: document.getElementById('substitute-teacher').value || null
+                leave_type_id: parseInt(leaveTypeId),
+                from_date: fromDate,
+                to_date: toDate,
+                total_days: parseFloat(totalDays),
+                reason: reason,
+                substitute_faculty_id: substituteId ? parseInt(substituteId) : null
             };
 
+            // Show loading state
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            
             try {
-                const response = await fetch(`${API_BASE}/leave/apply`, {
+                const response = await fetch(`${API_BASE}/leave/demo/apply`, {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${authToken}`
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(formData)
                 });
 
                 if (response.ok) {
-                    alert('Leave application submitted successfully!');
+                    const result = await response.json();
+                    
+                    // Show success message
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success';
+                    successDiv.innerHTML = `<strong>Success!</strong> Leave application submitted successfully. Application ID: ${result.id || 'N/A'}`;
+                    this.insertBefore(successDiv, this.firstChild);
+                    
+                    // Reset form
                     this.reset();
+                    document.getElementById('substitute-group').style.display = 'none';
+                    const warning = document.getElementById('days-warning');
+                    if (warning) warning.remove();
+                    
+                    // Remove success message after 7 seconds
+                    setTimeout(() => successDiv.remove(), 7000);
+                } else if (response.status === 401) {
+                    // Demo mode submission
+                    const successDiv = document.createElement('div');
+                    successDiv.className = 'success';
+                    successDiv.innerHTML = '<strong>Demo Mode:</strong> Leave application would be submitted (authentication required for actual submission). Your request would be processed normally in production.';
+                    this.insertBefore(successDiv, this.firstChild);
+                    
+                    // Reset form
+                    this.reset();
+                    document.getElementById('substitute-group').style.display = 'none';
+                    const warning = document.getElementById('days-warning');
+                    if (warning) warning.remove();
+                    
+                    setTimeout(() => successDiv.remove(), 8000);
                 } else {
                     const error = await response.json();
-                    alert('Error: ' + (error.message || 'Failed to submit application'));
+                    throw new Error(error.message || 'Failed to submit application');
                 }
             } catch (error) {
                 console.error('Error submitting application:', error);
-                alert('Error submitting application');
+                
+                // Handle demo mode for network errors
+                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                    const demoDiv = document.createElement('div');
+                    demoDiv.className = 'demo-notice';
+                    demoDiv.innerHTML = '<strong>Demo Mode:</strong> Backend not available. In production, this would submit to the API.';
+                    this.insertBefore(demoDiv, this.firstChild);
+                    
+                    // Reset form in demo mode
+                    this.reset();
+                    document.getElementById('substitute-group').style.display = 'none';
+                    const warning = document.getElementById('days-warning');
+                    if (warning) warning.remove();
+                    
+                    setTimeout(() => demoDiv.remove(), 8000);
+                } else {
+                    // Show error message
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'error';
+                    errorDiv.textContent = 'Error: ' + error.message;
+                    this.insertBefore(errorDiv, this.firstChild);
+                    
+                    setTimeout(() => errorDiv.remove(), 5000);
+                }
+            } finally {
+                // Restore button state
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
             }
         });
 

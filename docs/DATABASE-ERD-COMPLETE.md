@@ -194,9 +194,9 @@ id (PK) | faculty_id (FK) | leave_type_id (FK) | from_date  | to_date    | total
 ### Transactional Data
 - **Faculty Records**: 2+ active faculty
 - **Student Records**: Sample data available
-- **Time Slots**: 14 configured slots
+- **Time Slots**: 15 configured slots (MRIT Schedule: 9:15 AM - 4:15 PM)
 - **Leave Balances**: 18 records (2 faculty/staff × 9 leave types)
-- **Sample Applications**: 3 faculty leave applications in different stages
+- **Sample Applications**: 5 faculty leave applications in different stages
 
 ## 🔍 Database Indexes
 
@@ -270,7 +270,8 @@ database/migrations/
 ├── 006-add-timetable-structure.sql   # Timetable integration
 ├── 007-leave-management-schema.sql   # Leave management tables
 ├── 008-leave-seed-data.sql          # Leave seed data (initial)
-└── 009-leave-seed-data-fixed.sql    # Leave seed data (corrected)
+├── 009-leave-seed-data-fixed.sql    # Leave seed data (corrected)
+└── 010-update-time-slots-mrit-schedule.sql # MRIT schedule integration
 ```
 
 ## 🧪 Database Verification Commands

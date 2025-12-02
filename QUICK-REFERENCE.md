@@ -44,6 +44,13 @@ npm run start:dev             # Run in dev mode
 npm run build                 # Build for production
 ```
 
+### UI Testing
+```bash
+./test-ui-systems.sh          # Test attendance & leave systems
+curl http://localhost:3000/api/v1/attendance/time-slots  # Test time slots
+curl http://localhost:3000/api/v1/leave/types            # Test leave types
+```
+
 ### Git Commands
 ```bash
 git status                    # Check changes
@@ -69,11 +76,13 @@ git log --oneline             # View commit history
 | Service | URL | Credentials |
 |---------|-----|-------------|
 | Backend API | http://localhost:3000 | - |
+| Attendance UI | http://localhost:3000/attendance.html | - |
+| Leave Management UI | http://localhost:3000/leave.html | - |
 | Nginx Proxy | http://localhost:80 | - |
 | PostgreSQL | localhost:5432 | mrit_admin / (see .env) |
 | Redis | localhost:6379 | - |
 
-## 📊 Database Tables (27)
+## 📊 Database Tables (34)
 
 **Master (14):** grad_year, gender, reservation, admission, entry, batch, department, scheme, coursecat, semester, academic_year, financial_year, exam_type, section
 
@@ -81,9 +90,13 @@ git log --oneline             # View commit history
 
 **Academic (2):** course, course_offering
 
-**Attendance (4):** attendance_session, attendance_record, attendance_log, attendance_summary
+**Attendance (7):** attendance_session, attendance_record, attendance_log, attendance_summary, time_slot, timetable, attendance_defaulter
+
+**Leave Management (4):** leave_type, leave_balance, leave_application, leave_approval
 
 **Notifications (3):** sms_template, sms_log, notification_preference
+
+**Time Slots:** 15 slots with MRIT schedule (9:15 AM - 4:15 PM)
 
 ## 🐛 Troubleshooting
 
@@ -139,4 +152,5 @@ mrit-hub/
 
 **Quick Start:** `./start.sh`  
 **Verify:** `docker-compose ps`  
+**Test UI:** `./test-ui-systems.sh`  
 **Logs:** `docker-compose logs -f`

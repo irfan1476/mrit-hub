@@ -28,7 +28,7 @@ export class AttendanceService {
     private smsService: SmsService,
   ) {}
 
-  async createSession(dto: CreateAttendanceSessionDto, faculty_id: string) {
+  async createSession(dto: CreateAttendanceSessionDto, faculty_id: number | string) {
     // Find time slot by name
     const timeSlot = await this.timeSlotRepo.findOne({
       where: { slot_name: dto.time_slot, active: true }
@@ -43,15 +43,15 @@ export class AttendanceService {
     const sectionMap = { 'A': 1, 'B': 2, 'C': 3, 'D': 4 };
 
     const sessionData = {
-      faculty_id: parseInt(faculty_id),
+      faculty_id: typeof faculty_id === 'string' ? parseInt(faculty_id) : faculty_id,
       session_date: new Date(dto.session_date),
       topic: dto.topic,
-      created_by: parseInt(faculty_id),
+      created_by: typeof faculty_id === 'string' ? parseInt(faculty_id) : faculty_id,
       time_slot_id: timeSlot.id,
       duration_hours: timeSlot.duration_hours,
       class_type: timeSlot.slot_type,
       department_id: departmentMap[dto.department],
-      semester_id: parseInt(dto.semester.toString()),
+      semester_id: parseInt(dto.semester),
       section_id: sectionMap[dto.section],
       subject_code: dto.subject_code,
       edit_deadline: new Date(Date.now() + 36 * 60 * 60 * 1000), // 36 hours from now
@@ -62,7 +62,7 @@ export class AttendanceService {
     return await this.sessionRepo.save(session);
   }
 
-  async markAttendance(dto: MarkAttendanceDto, faculty_id: string) {
+  async markAttendance(dto: MarkAttendanceDto, faculty_id: number | string) {
     const session = await this.sessionRepo.findOne({
       where: { id: parseInt(dto.session_id) },
     });
@@ -96,7 +96,7 @@ export class AttendanceService {
         session_id: parseInt(dto.session_id),
         student_id: student.id,
         status: record.status === AttendanceStatusDto.PRESENT ? 'P' : 'A',
-        marked_by: parseInt(faculty_id),
+        marked_by: typeof faculty_id === 'string' ? parseInt(faculty_id) : faculty_id,
       };
       
       const attendanceRecord = this.recordRepo.create(attendanceRecordData);
@@ -123,17 +123,16 @@ export class AttendanceService {
 
   async getAttendanceReport(dto: AttendanceReportDto) {
     const query = this.recordRepo.createQueryBuilder('record')
-      .leftJoinAndSelect('record.session', 'session')
-      .leftJoinAndSelect('record.student', 'student');
+      .leftJoinAndSelect('record.session', 'session');
 
     if (dto.department) {
-      query.andWhere('session.department = :department', { department: dto.department });
+      query.andWhere('session.department_id = :department', { department: dto.department });
     }
     if (dto.semester) {
-      query.andWhere('session.semester = :semester', { semester: dto.semester });
+      query.andWhere('session.semester_id = :semester', { semester: dto.semester });
     }
     if (dto.section) {
-      query.andWhere('session.section = :section', { section: dto.section });
+      query.andWhere('session.section_id = :section', { section: dto.section });
     }
     if (dto.subject_code) {
       query.andWhere('session.subject_code = :subject_code', { subject_code: dto.subject_code });

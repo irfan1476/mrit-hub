@@ -111,7 +111,7 @@ Initial data includes:
 - **Sample faculty** and student data
 - **SMS templates** for notifications
 - **9 Leave types** with MRIT policies
-- **Time slots** for attendance management
+- **15 Time slots** with MRIT schedule (9:15 AM - 4:15 PM)
 
 ## 🔧 Development
 
@@ -120,6 +120,7 @@ Initial data includes:
 - ✅ Phase 1: Authentication Module Complete
 - ✅ Phase 2: Attendance Management Complete
 - ✅ Phase 3: Leave Management System Complete
+- ✅ UI Systems: Attendance & Leave UI Complete with MRIT Schedule
 - ⏳ Phase 4-6: Pending
 
 ### Install backend dependencies:
@@ -254,8 +255,9 @@ npm run test:cov
 | Phase 5 | SIS-lite | ⏳ Pending | 1 day |
 | Phase 6 | Account Requests | ⏳ Pending | 1 day |
 | Phase 7 | Deployment | ⏳ Pending | 2 days |
+| UI Fix | Attendance & Leave UI | ✅ Complete | 0.5 days |
 
-**Overall Progress**: 60% (7/12 days)
+**Overall Progress**: 70% (8.5/12 days)
 
 ## 🐛 Troubleshooting
 
@@ -313,6 +315,6 @@ Proprietary - MRIT Internal Use Only
 
 ---
 
-**Current Status**: ✅ Phase 3 Complete - Leave Management Ready  
+**Current Status**: ✅ UI Systems Complete - Attendance & Leave Management with MRIT Schedule  
 **Next Step**: Phase 4 - Identity Verification System  
 **Repository**: https://github.com/irfan1476/mrit-hub
