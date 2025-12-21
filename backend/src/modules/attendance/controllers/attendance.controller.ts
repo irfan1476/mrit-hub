@@ -16,6 +16,14 @@ export class AttendanceController {
     return this.attendanceService.getTimeSlots();
   }
 
+  @Get('subjects')
+  async getSubjects(@Query('department') departmentId?: string, @Query('semester') semesterId?: string) {
+    if (!departmentId || !semesterId) {
+      return { error: 'Department and semester are required' };
+    }
+    return this.attendanceService.getSubjects(parseInt(departmentId), parseInt(semesterId));
+  }
+
   @Get('students')
   async getStudents(@Query() dto: GetStudentsDto) {
     return this.attendanceService.getStudentsByClass(dto);
@@ -29,12 +37,12 @@ export class AttendanceController {
   // Demo endpoints
   @Post('demo/session')
   async demoCreateSession(@Body() dto: CreateAttendanceSessionDto) {
-    return this.attendanceService.createSession(dto, 1); // Use faculty ID 1 for demo
+    return this.attendanceService.createSession(dto, 1);
   }
 
   @Post('demo/mark')
   async demoMarkAttendance(@Body() dto: MarkAttendanceDto) {
-    return this.attendanceService.markAttendance(dto, 1); // Use faculty ID 1 for demo
+    return this.attendanceService.markAttendance(dto, 1);
   }
 
   // Protected endpoints

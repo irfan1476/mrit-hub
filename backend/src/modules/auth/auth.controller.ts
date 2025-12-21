@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UseGuards, Body, Query } from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, Body, Query, UnauthorizedException } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto, LoginDto, RefreshTokenDto, ForgotPasswordDto, ResetPasswordDto, VerifyEmailDto } from './dto/auth.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -16,6 +16,25 @@ export class AuthController {
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('demo-login')
+  async demoLogin(@Body() loginDto: LoginDto) {
+    // Demo login for testing - accepts any email with password "demo123"
+    if (loginDto.password === 'demo123') {
+      return {
+        accessToken: 'demo-access-token',
+        refreshToken: 'demo-refresh-token',
+        user: {
+          id: 1,
+          email: loginDto.email,
+          role: 'FACULTY',
+          firstName: 'Demo',
+          lastName: 'User'
+        }
+      };
+    }
+    throw new UnauthorizedException('Invalid demo credentials');
   }
 
   @Get('verify-email')

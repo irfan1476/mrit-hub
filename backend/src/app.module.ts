@@ -7,6 +7,7 @@ import { EmailModule } from './modules/email/email.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { LeaveModule } from './modules/leave/leave.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -20,6 +21,7 @@ import { AppController } from './app.controller';
       autoLoadEntities: true,
       synchronize: false, // Use migrations in production
       logging: process.env.NODE_ENV === 'development',
+      ssl: false,
     }),
     AuthModule,
     UsersModule,
@@ -27,6 +29,7 @@ import { AppController } from './app.controller';
     SmsModule,
     AttendanceModule,
     LeaveModule,
+    DashboardModule,
   ],
   controllers: [AppController],
 })

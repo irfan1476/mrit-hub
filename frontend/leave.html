@@ -42,11 +42,154 @@
         .balance-card p { margin: 0.25rem 0; }
         .demo-notice { background: #fff3cd; color: #856404; padding: 0.75rem; border-radius: 4px; margin: 1rem 0; border-left: 4px solid #ffc107; }
         .demo-notice strong { color: #664d03; }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container { padding: 1rem; margin-top: 1rem; }
+            .header { padding: 1rem; position: relative; }
+            .header h1 { font-size: 1.25rem; }
+            .header > div { position: static !important; margin-top: 0.75rem; display: flex; gap: 0.5rem; justify-content: center; }
+            .header button { margin: 0 !important; padding: 0.5rem 1rem; font-size: 0.9rem; }
+            
+            .nav { flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem; }
+            .nav button { flex: 1 1 calc(50% - 0.5rem); font-size: 0.85rem; padding: 0.5rem; }
+            
+            .card { padding: 1rem; }
+            .form-group label { font-size: 0.9rem; }
+            .form-group input, .form-group select, .form-group textarea { 
+                font-size: 1rem;
+                padding: 0.75rem;
+                min-height: 44px;
+            }
+            
+            /* Larger dropdown options for Android */
+            select option {
+                font-size: 16px;
+                padding: 12px 8px;
+                line-height: 1.5;
+            }
+            
+            /* Disable native dropdown on mobile */
+            .mobile-picker-trigger {
+                pointer-events: none;
+                -webkit-appearance: none;
+                appearance: none;
+            }
+            
+            .balance-grid { grid-template-columns: 1fr; }
+            .balance-card { padding: 0.75rem; }
+            
+            .btn { padding: 0.75rem 1rem; font-size: 1rem; min-height: 44px; }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1rem; }
+            .nav button { flex: 1 1 100%; }
+            .balance-card h4 { font-size: 0.9rem; }
+        }
+        
+        /* Modal Picker for Mobile */
+        .modal-picker {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.2s;
+        }
+        .modal-picker.active { display: flex; align-items: flex-end; }
+        
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-height: 70vh;
+            border-radius: 20px 20px 0 0;
+            animation: slideUp 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.25rem;
+            color: #1f2937;
+        }
+        
+        .modal-close {
+            background: #f3f4f6;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .modal-search {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-search input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+        
+        .modal-options {
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-option {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+        
+        .modal-option:active {
+            background: #f3f4f6;
+        }
+        
+        .modal-option.selected {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>🏛️ MRIT Hub - Leave Management System</h1>
+        <div style="position: absolute; top: 1rem; right: 1rem;">
+            <button class="btn" onclick="window.location.href='dashboard.html'" style="background: #34495e; margin-right: 0.5rem;">← Dashboard</button>
+            <button class="btn" onclick="logout()" style="background: #e74c3c;">Logout</button>
+        </div>
     </div>
 
     <div class="nav">
@@ -64,7 +207,7 @@
             <form id="apply-form">
                 <div class="form-group">
                     <label>Leave Type <span class="mandatory">*</span></label>
-                    <select id="leave-type" required>
+                    <select id="leave-type" class="mobile-picker-trigger" required>
                         <option value="">Select Leave Type</option>
                     </select>
                 </div>
@@ -86,7 +229,7 @@
                 </div>
                 <div class="form-group" id="substitute-group">
                     <label>Substitute Teacher</label>
-                    <select id="substitute-teacher">
+                    <select id="substitute-teacher" class="mobile-picker-trigger">
                         <option value="">Select Substitute</option>
                     </select>
                 </div>
@@ -118,9 +261,133 @@
         </div>
     </div>
 
+    <!-- Modal Picker -->
+    <div id="modalPicker" class="modal-picker">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Select Option</h3>
+                <button class="modal-close" onclick="closeModalPicker()">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="modalSearch" placeholder="Search..." oninput="filterModalOptions()">
+            </div>
+            <div class="modal-options" id="modalOptions"></div>
+        </div>
+    </div>
+
     <script>
-        const API_BASE = 'http://localhost:3000/api/v1';
-        let authToken = localStorage.getItem('authToken') || 'dummy-token';
+        const API_BASE = '/api/v1';
+        let authToken = localStorage.getItem('accessToken');
+        let currentSelectId = null;
+        let isMobile = window.innerWidth <= 768;
+        
+        // Check authentication
+        if (!authToken) {
+            window.location.href = 'index.html';
+        }
+        
+        // Mobile picker setup
+        if (isMobile) {
+            document.querySelectorAll('.mobile-picker-trigger').forEach(select => {
+                select.style.pointerEvents = 'auto';
+                select.addEventListener('click', function(e) {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        openModalPicker(this);
+                        return false;
+                    }
+                });
+                select.addEventListener('mousedown', function(e) {
+                    if (window.innerWidth <= 768) {
+                        e.preventDefault();
+                        return false;
+                    }
+                });
+            });
+        }
+        
+        function openModalPicker(selectElement) {
+            if (window.innerWidth > 768) return;
+            
+            currentSelectId = selectElement.id;
+            const label = selectElement.previousElementSibling.textContent.replace('*', '').trim();
+            const options = Array.from(selectElement.options);
+            const currentValue = selectElement.value;
+            
+            document.getElementById('modalTitle').textContent = `Select ${label}`;
+            document.getElementById('modalSearch').value = '';
+            
+            const modalOptions = document.getElementById('modalOptions');
+            modalOptions.innerHTML = options.map(opt => `
+                <div class="modal-option ${opt.value === currentValue ? 'selected' : ''}" 
+                     data-value="${opt.value}" 
+                     onclick="selectModalOption('${opt.value.replace(/'/g, "\\'")}')">  
+                    ${opt.text}
+                </div>
+            `).join('');
+            
+            document.getElementById('modalPicker').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModalPicker() {
+            document.getElementById('modalPicker').classList.remove('active');
+            document.body.style.overflow = '';
+            currentSelectId = null;
+        }
+        
+        function selectModalOption(value) {
+            if (currentSelectId) {
+                const select = document.getElementById(currentSelectId);
+                select.value = value;
+                
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                select.dispatchEvent(event);
+            }
+            closeModalPicker();
+        }
+        
+        function filterModalOptions() {
+            const searchTerm = document.getElementById('modalSearch').value.toLowerCase();
+            const options = document.querySelectorAll('.modal-option');
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+        
+        // Close modal on backdrop click
+        document.getElementById('modalPicker').addEventListener('click', function(e) {
+            if (e.target === this) closeModalPicker();
+        });
+        
+        // Update isMobile on resize
+        window.addEventListener('resize', () => {
+            isMobile = window.innerWidth <= 768;
+        });
+        
+        // Helper function to make authenticated requests
+        async function makeAuthenticatedRequest(url, options = {}) {
+            const headers = {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            };
+            
+            const response = await fetch(url, { ...options, headers });
+            
+            if (response.status === 401) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            return response;
+        }
 
         // Show/hide sections
         function showSection(section) {
@@ -185,7 +452,6 @@
             select.innerHTML = '<option value="">Loading...</option>';
             
             try {
-                // Try public endpoint first
                 const response = await fetch(`${API_BASE}/leave/types`);
                 
                 if (!response.ok) {
@@ -219,8 +485,7 @@
             container.innerHTML = '<div class="card">Loading applications...</div>';
             
             try {
-                // Try demo endpoint for testing
-                const response = await fetch(`${API_BASE}/leave/demo/applications`);
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/my-applications`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -234,8 +499,9 @@
                             <h4>${app.leave_type?.name || 'Unknown Leave Type'}</h4>
                             <p><strong>Dates:</strong> ${formatDate(app.from_date)} to ${formatDate(app.to_date)} (${app.total_days} days)</p>
                             <p><strong>Reason:</strong> ${app.reason}</p>
-                            <p><strong>Status:</strong> <span class="status-${app.status.toLowerCase().replace('_', '-')}">${formatStatus(app.status)}</span></p>
+                            <p><strong>Status:</strong> <span class="status-${app.status.toLowerCase().replace(/_/g, '-')}">${formatStatus(app.status)}</span></p>
                             <p><strong>Applied:</strong> ${formatDate(app.created_at)}</p>
+                            ${app.substitute_faculty ? `<p><strong>Substitute:</strong> ${app.substitute_faculty.faculty_name}</p>` : ''}
                         </div>
                     `).join('');
                 } else {
@@ -253,8 +519,7 @@
             container.innerHTML = '<div class="balance-card">Loading balances...</div>';
             
             try {
-                // Try demo endpoint for testing
-                const response = await fetch(`${API_BASE}/leave/demo/balance`);
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/balance`);
                 
                 if (!response.ok) {
                     throw new Error(`HTTP ${response.status}`);
@@ -277,11 +542,11 @@
                         `;
                     }).join('');
                 } else {
-                    container.innerHTML = '<div class="balance-card">No leave balances found.</div>';
+                    container.innerHTML = '<div class="balance-card">No leave balances configured for this academic year.</div>';
                 }
             } catch (error) {
                 console.error('Error loading balances:', error);
-                container.innerHTML = '<div class="balance-card" style="color: red;">Error loading balances. Please try again.</div>';
+                container.innerHTML = '<div class="balance-card" style="color: red;">Error loading balances.</div>';
             }
         }
 
@@ -291,35 +556,24 @@
             select.innerHTML = '<option value="">Loading faculty...</option>';
             
             try {
-                // Try to fetch from API, fallback to mock data
-                let faculty;
-                try {
-                    const response = await fetch(`${API_BASE}/faculty/list`);
-                    if (response.ok) {
-                        faculty = await response.json();
-                    } else {
-                        throw new Error('API not available');
-                    }
-                } catch {
-                    // Mock faculty data for demo
-                    faculty = [
-                        { id: 1, faculty_name: 'Dr. Smith', department: 'CSE' },
-                        { id: 2, faculty_name: 'Prof. Jones', department: 'ECE' },
-                        { id: 3, faculty_name: 'Dr. Wilson', department: 'ME' },
-                        { id: 4, faculty_name: 'Prof. Davis', department: 'CSE' },
-                        { id: 5, faculty_name: 'Dr. Brown', department: 'CE' }
-                    ];
-                }
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/faculty-list`);
                 
-                select.innerHTML = '<option value="">Select Substitute</option>';
-                if (Array.isArray(faculty) && faculty.length > 0) {
-                    faculty.forEach(f => {
-                        const name = f.faculty_name || f.name;
-                        const dept = f.department ? ` (${f.department})` : '';
-                        select.innerHTML += `<option value="${f.id}">${name}${dept}</option>`;
-                    });
+                if (response.ok) {
+                    const faculty = await response.json();
+                    
+                    select.innerHTML = '<option value="">Select Substitute</option>';
+                    if (Array.isArray(faculty) && faculty.length > 0) {
+                        faculty.forEach(f => {
+                            const name = f.faculty_name || f.name;
+                            const dept = f.department?.name || f.department || '';
+                            const deptText = dept ? ` (${dept})` : '';
+                            select.innerHTML += `<option value="${f.id}">${name}${deptText}</option>`;
+                        });
+                    } else {
+                        select.innerHTML = '<option value="">No faculty available</option>';
+                    }
                 } else {
-                    select.innerHTML = '<option value="">No faculty available</option>';
+                    select.innerHTML = '<option value="">Error loading faculty</option>';
                 }
             } catch (error) {
                 console.error('Error loading faculty:', error);
@@ -329,36 +583,123 @@
 
         // Load pending approvals
         async function loadPendingApprovals() {
-            const subContainer = document.getElementById('substitute-approvals');
-            const hodContainer = document.getElementById('hod-approvals');
+            loadSubstituteApprovals();
+            loadHodApprovals();
+        }
+        
+        async function loadSubstituteApprovals() {
+            const container = document.getElementById('substitute-approvals');
+            container.innerHTML = '<div class="card">Loading substitute approvals...</div>';
             
-            // Mock data for demonstration
-            subContainer.innerHTML = `
-                <div class="card" style="border-left: 4px solid #f39c12;">
-                    <h4>Casual Leave - Dr. Johnson</h4>
-                    <p><strong>Dates:</strong> 2025-01-15 to 2025-01-16 (2 days)</p>
-                    <p><strong>Reason:</strong> Personal work</p>
-                    <p><strong>Applied:</strong> ${new Date().toLocaleDateString()}</p>
-                    <div style="margin-top: 1rem;">
-                        <button class="btn btn-success" style="margin-right: 0.5rem;">Approve</button>
-                        <button class="btn btn-danger">Reject</button>
-                    </div>
-                </div>
-            `;
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/pending-approvals/substitute`);
+                
+                if (response.ok) {
+                    const approvals = await response.json();
+                    
+                    if (Array.isArray(approvals) && approvals.length > 0) {
+                        container.innerHTML = approvals.map(app => `
+                            <div class="card" style="margin-bottom: 1rem; border-left: 4px solid #f39c12;">
+                                <h4>${app.leave_type?.name || 'Unknown Leave Type'} - ${app.faculty?.faculty_name || 'Unknown Faculty'}</h4>
+                                <p><strong>Dates:</strong> ${formatDate(app.from_date)} to ${formatDate(app.to_date)} (${app.total_days} days)</p>
+                                <p><strong>Reason:</strong> ${app.reason}</p>
+                                <p><strong>Applied:</strong> ${formatDate(app.created_at)}</p>
+                                <div style="margin-top: 1rem;">
+                                    <button class="btn btn-success" style="margin-right: 0.5rem;" onclick="approveLeave(${app.id}, 'substitute', true)">Approve</button>
+                                    <button class="btn btn-danger" onclick="approveLeave(${app.id}, 'substitute', false)">Reject</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="card">No pending substitute approvals.</div>';
+                    }
+                } else {
+                    container.innerHTML = '<div class="card" style="color: red;">Error loading substitute approvals.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading substitute approvals:', error);
+                container.innerHTML = '<div class="card" style="color: red;">Error loading substitute approvals.</div>';
+            }
+        }
+        
+        async function loadHodApprovals() {
+            const container = document.getElementById('hod-approvals');
+            container.innerHTML = '<div class="card">Loading HOD approvals...</div>';
             
-            hodContainer.innerHTML = `
-                <div class="card" style="border-left: 4px solid #3498db;">
-                    <h4>Earned Leave - Prof. Davis</h4>
-                    <p><strong>Dates:</strong> 2025-02-01 to 2025-02-05 (5 days)</p>
-                    <p><strong>Reason:</strong> Family function</p>
-                    <p><strong>Substitute Status:</strong> <span style="color: #27ae60;">Approved</span></p>
-                    <p><strong>Applied:</strong> ${new Date().toLocaleDateString()}</p>
-                    <div style="margin-top: 1rem;">
-                        <button class="btn btn-success" style="margin-right: 0.5rem;">Approve</button>
-                        <button class="btn btn-danger">Reject</button>
-                    </div>
-                </div>
-            `;
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/pending-approvals/hod`);
+                
+                if (response.ok) {
+                    const approvals = await response.json();
+                    
+                    if (Array.isArray(approvals) && approvals.length > 0) {
+                        container.innerHTML = approvals.map(app => `
+                            <div class="card" style="margin-bottom: 1rem; border-left: 4px solid #3498db;">
+                                <h4>${app.leave_type?.name || 'Unknown Leave Type'} - ${app.faculty?.faculty_name || 'Unknown Faculty'}</h4>
+                                <p><strong>Dates:</strong> ${formatDate(app.from_date)} to ${formatDate(app.to_date)} (${app.total_days} days)</p>
+                                <p><strong>Reason:</strong> ${app.reason}</p>
+                                <p><strong>Substitute Status:</strong> <span style="color: #27ae60;">Approved</span></p>
+                                <p><strong>Applied:</strong> ${formatDate(app.created_at)}</p>
+                                <div style="margin-top: 1rem;">
+                                    <button class="btn btn-success" style="margin-right: 0.5rem;" onclick="approveLeave(${app.id}, 'hod', true)">Approve</button>
+                                    <button class="btn btn-danger" onclick="approveLeave(${app.id}, 'hod', false)">Reject</button>
+                                </div>
+                            </div>
+                        `).join('');
+                    } else {
+                        container.innerHTML = '<div class="card">No pending HOD approvals.</div>';
+                    }
+                } else {
+                    container.innerHTML = '<div class="card" style="color: red;">Error loading HOD approvals.</div>';
+                }
+            } catch (error) {
+                console.error('Error loading HOD approvals:', error);
+                container.innerHTML = '<div class="card" style="color: red;">Error loading HOD approvals.</div>';
+            }
+        }
+        
+        // Approve/reject leave function
+        async function approveLeave(applicationId, stage, isApproved) {
+            const action = isApproved ? 'approve' : 'reject';
+            const reason = isApproved ? '' : prompt('Please provide reason for rejection:');
+            
+            if (!isApproved && !reason) {
+                return; // User cancelled
+            }
+            
+            try {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/approve/${applicationId}/${stage}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        decision: isApproved ? 'APPROVED' : 'REJECTED',
+                        comment: reason || ''
+                    })
+                });
+                
+                if (response.ok) {
+                    alert(`Leave application ${action}d successfully!`);
+                    // Reload the appropriate approvals
+                    if (stage === 'substitute') {
+                        loadSubstituteApprovals();
+                        // Also reload applications if viewing own applications
+                        if (document.getElementById('section-view').style.display !== 'none') {
+                            loadMyApplications();
+                        }
+                    } else {
+                        loadHodApprovals();
+                        // Also reload applications if viewing own applications  
+                        if (document.getElementById('section-view').style.display !== 'none') {
+                            loadMyApplications();
+                        }
+                    }
+                } else {
+                    const error = await response.json();
+                    alert(`Error ${action}ing leave: ${error.message || 'Unknown error'}`);
+                }
+            } catch (error) {
+                console.error(`Error ${action}ing leave:`, error);
+                alert(`Error ${action}ing leave. Please try again.`);
+            }
         }
 
         // Helper functions
@@ -456,11 +797,8 @@
             submitBtn.disabled = true;
             
             try {
-                const response = await fetch(`${API_BASE}/leave/demo/apply`, {
+                const response = await makeAuthenticatedRequest(`${API_BASE}/leave/apply`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
                     body: JSON.stringify(formData)
                 });
 
@@ -481,20 +819,6 @@
                     
                     // Remove success message after 7 seconds
                     setTimeout(() => successDiv.remove(), 7000);
-                } else if (response.status === 401) {
-                    // Demo mode submission
-                    const successDiv = document.createElement('div');
-                    successDiv.className = 'success';
-                    successDiv.innerHTML = '<strong>Demo Mode:</strong> Leave application would be submitted (authentication required for actual submission). Your request would be processed normally in production.';
-                    this.insertBefore(successDiv, this.firstChild);
-                    
-                    // Reset form
-                    this.reset();
-                    document.getElementById('substitute-group').style.display = 'none';
-                    const warning = document.getElementById('days-warning');
-                    if (warning) warning.remove();
-                    
-                    setTimeout(() => successDiv.remove(), 8000);
                 } else {
                     const error = await response.json();
                     throw new Error(error.message || 'Failed to submit application');
@@ -502,29 +826,13 @@
             } catch (error) {
                 console.error('Error submitting application:', error);
                 
-                // Handle demo mode for network errors
-                if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                    const demoDiv = document.createElement('div');
-                    demoDiv.className = 'demo-notice';
-                    demoDiv.innerHTML = '<strong>Demo Mode:</strong> Backend not available. In production, this would submit to the API.';
-                    this.insertBefore(demoDiv, this.firstChild);
-                    
-                    // Reset form in demo mode
-                    this.reset();
-                    document.getElementById('substitute-group').style.display = 'none';
-                    const warning = document.getElementById('days-warning');
-                    if (warning) warning.remove();
-                    
-                    setTimeout(() => demoDiv.remove(), 8000);
-                } else {
-                    // Show error message
-                    const errorDiv = document.createElement('div');
-                    errorDiv.className = 'error';
-                    errorDiv.textContent = 'Error: ' + error.message;
-                    this.insertBefore(errorDiv, this.firstChild);
-                    
-                    setTimeout(() => errorDiv.remove(), 5000);
-                }
+                // Show error message
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'error';
+                errorDiv.textContent = 'Error: ' + error.message;
+                this.insertBefore(errorDiv, this.firstChild);
+                
+                setTimeout(() => errorDiv.remove(), 5000);
             } finally {
                 // Restore button state
                 submitBtn.textContent = originalText;
@@ -534,6 +842,13 @@
 
         // Initialize
         showSection('apply');
+        document.getElementById('btn-apply').classList.add('active');
+        
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            window.location.href = 'index.html';
+        }
     </script>
 </body>
 </html>

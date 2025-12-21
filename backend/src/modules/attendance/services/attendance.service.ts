@@ -38,9 +38,16 @@ export class AttendanceService {
       throw new NotFoundException('Time slot not found');
     }
 
-    // Get department, semester, section IDs (simplified for now)
-    const departmentMap = { 'CSE': 6, 'ECE': 7, 'ME': 8, 'CE': 5 };
-    const sectionMap = { 'A': 1, 'B': 2, 'C': 3, 'D': 4 };
+    // Get department and section mappings from database
+    const departmentQuery = `SELECT id, code FROM department WHERE code = $1`;
+    const sectionQuery = `SELECT id, name FROM section WHERE name = $1`;
+    
+    const [deptResult] = await this.timeSlotRepo.query(departmentQuery, [dto.department]);
+    const [sectionResult] = await this.timeSlotRepo.query(sectionQuery, [dto.section]);
+    
+    if (!deptResult || !sectionResult) {
+      throw new NotFoundException('Department or section not found');
+    }
 
     const sessionData = {
       faculty_id: typeof faculty_id === 'string' ? parseInt(faculty_id) : faculty_id,
@@ -50,9 +57,9 @@ export class AttendanceService {
       time_slot_id: timeSlot.id,
       duration_hours: timeSlot.duration_hours,
       class_type: timeSlot.slot_type,
-      department_id: departmentMap[dto.department],
+      department_id: deptResult.id,
       semester_id: parseInt(dto.semester),
-      section_id: sectionMap[dto.section],
+      section_id: sectionResult.id,
       subject_code: dto.subject_code,
       edit_deadline: new Date(Date.now() + 36 * 60 * 60 * 1000), // 36 hours from now
     };
@@ -107,14 +114,18 @@ export class AttendanceService {
 
       // Send SMS for absent students
       if (record.status === AttendanceStatusDto.ABSENT) {
-        // In real app, fetch student and parent details from database
+        // Get student phone from database
+        const phoneQuery = `SELECT phone FROM student_data WHERE usn = $1`;
+        const [phoneResult] = await this.studentRepo.query(phoneQuery, [record.student_id]);
+        const parentPhone = phoneResult?.phone || null;
         const studentName = `Student ${record.student_id}`;
-        const parentPhone = '+919876543210'; // Mock phone
         const subject = session.topic || 'Unknown Subject';
-        const date = new Date(session.session_date).toDateString();
+        const sessionDate = new Date(session.session_date).toDateString();
         
-        this.smsService.sendAbsentNotification(studentName, parentPhone, subject, date)
-          .catch(error => console.error('SMS failed:', error));
+        if (parentPhone) {
+          this.smsService.sendAbsentNotification(studentName, parentPhone, subject, sessionDate)
+            .catch(error => console.error('SMS failed:', error));
+        }
       }
     }
 
@@ -177,15 +188,23 @@ export class AttendanceService {
   }
 
   async getStudentsByClass(dto: GetStudentsDto) {
-    const departmentMap = { 'CSE': 6, 'ECE': 7, 'ME': 8, 'CE': 5 };
-    const sectionMap = { 'A': 1, 'B': 2, 'C': 3, 'D': 4 };
+    // Get department and section IDs from database
+    const departmentQuery = `SELECT id FROM department WHERE code = $1`;
+    const sectionQuery = `SELECT id FROM section WHERE name = $1`;
+    
+    const [deptResult] = await this.studentRepo.query(departmentQuery, [dto.department]);
+    const [sectionResult] = await this.studentRepo.query(sectionQuery, [dto.section]);
+    
+    if (!deptResult || !sectionResult) {
+      throw new NotFoundException('Department or section not found');
+    }
 
     const students = await this.studentRepo
       .createQueryBuilder('sd')
       .innerJoin('student_variables', 'sv', 'sd.usn = sv.usn')
-      .where('sd.branch_id = :departmentId', { departmentId: departmentMap[dto.department] })
+      .where('sd.branch_id = :departmentId', { departmentId: deptResult.id })
       .andWhere('sv.semester_id = :semesterId', { semesterId: dto.semester })
-      .andWhere('sv.section_id = :sectionId', { sectionId: sectionMap[dto.section] })
+      .andWhere('sv.section_id = :sectionId', { sectionId: sectionResult.id })
       .andWhere('sv.active = true')
       .select([
         'sd.id as id',
@@ -203,5 +222,23 @@ export class AttendanceService {
       where: { active: true },
       order: { start_time: 'ASC' }
     });
+  }
+
+  async getSubjects(departmentId: number, semesterId: number) {
+    try {
+      const query = `
+        SELECT c.id, c.course_code, c.course_name, c.credits 
+        FROM course c
+        WHERE c.branch = (SELECT code FROM department WHERE id = $1) 
+        AND c.semester = $2
+        ORDER BY c.course_name
+      `;
+      
+      const result = await this.sessionRepo.query(query, [departmentId, semesterId]);
+      return result;
+    } catch (error) {
+      console.error('Error in getSubjects:', error);
+      return [];
+    }
   }
 }

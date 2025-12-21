@@ -45,12 +45,143 @@
         .summary-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 1; text-align: center; }
         .summary-number { font-size: 2rem; font-weight: bold; color: #2563eb; }
         .summary-label { color: #6b7280; margin-top: 0.5rem; }
+        
+        @media (max-width: 768px) {
+            .container { padding: 1rem; }
+            .header { padding: 1rem; }
+            .header h1 { font-size: 1.25rem; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group input, .form-group select { 
+                font-size: 1rem;
+                padding: 0.75rem;
+                min-height: 44px;
+            }
+            
+            /* Mobile-optimized dropdowns */
+            .filter-group select {
+                font-size: 18px;
+                padding: 1rem;
+                min-height: 50px;
+                background-color: #fff;
+                border: 2px solid #2563eb;
+                pointer-events: none;
+                -webkit-appearance: none;
+                appearance: none;
+            }
+            
+            select option {
+                font-size: 18px;
+                padding: 16px;
+                min-height: 48px;
+            }
+            
+            .btn { padding: 0.75rem 1rem; font-size: 1rem; min-height: 44px; }
+        }
+        
+        /* Modal Picker for Mobile */
+        .modal-picker {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.2s;
+        }
+        .modal-picker.active { display: flex; align-items: flex-end; }
+        
+        .modal-content {
+            background: white;
+            width: 100%;
+            max-height: 70vh;
+            border-radius: 20px 20px 0 0;
+            animation: slideUp 0.3s;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.25rem;
+            color: #1f2937;
+        }
+        
+        .modal-close {
+            background: #f3f4f6;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .modal-search {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .modal-search input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+        
+        .modal-options {
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-option {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            cursor: pointer;
+            font-size: 1.1rem;
+            transition: background 0.2s;
+        }
+        
+        .modal-option:active {
+            background: #f3f4f6;
+        }
+        
+        .modal-option.selected {
+            background: #eff6ff;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        @media (max-width: 480px) {
+            .header h1 { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <h1>MRIT Hub - Attendance</h1>
         <div class="user-info">
+            <button class="btn btn-primary" onclick="window.location.href='dashboard.html'">← Dashboard</button>
             <span id="userEmail"></span>
             <button class="btn btn-primary" onclick="logout()">Logout</button>
         </div>
@@ -65,7 +196,7 @@
                 </div>
                 <div class="filter-group">
                     <label>Department</label>
-                    <select id="department">
+                    <select id="department" class="mobile-picker-trigger">
                         <option value="CSE">CSE</option>
                         <option value="ECE">ECE</option>
                         <option value="ME">ME</option>
@@ -74,15 +205,16 @@
                 </div>
                 <div class="filter-group">
                     <label>Semester</label>
-                    <select id="semester">
+                    <select id="semester" class="mobile-picker-trigger">
                         <option value="3">3rd Sem</option>
                         <option value="5">5th Sem</option>
                         <option value="7">7th Sem</option>
+                        <option value="8">8th Sem</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label>Section</label>
-                    <select id="section">
+                    <select id="section" class="mobile-picker-trigger">
                         <option value="A">A</option>
                         <option value="B">B</option>
                         <option value="C">C</option>
@@ -90,15 +222,13 @@
                 </div>
                 <div class="filter-group">
                     <label>Subject</label>
-                    <select id="subject">
-                        <option value="B1">Project Management with Git</option>
-                        <option value="B2">Data Structures</option>
-                        <option value="B3">Database Systems</option>
+                    <select id="subject" class="mobile-picker-trigger">
+                        <option value="">Select Subject</option>
                     </select>
                 </div>
                 <div class="filter-group">
                     <label>Time Slot</label>
-                    <select id="timeSlot">
+                    <select id="timeSlot" class="mobile-picker-trigger">
                         <option value="">Loading time slots...</option>
                     </select>
                 </div>
@@ -144,9 +274,25 @@
         </div>
     </div>
 
+    <!-- Modal Picker -->
+    <div id="modalPicker" class="modal-picker">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Select Option</h3>
+                <button class="modal-close" onclick="closeModalPicker()">&times;</button>
+            </div>
+            <div class="modal-search">
+                <input type="text" id="modalSearch" placeholder="Search..." oninput="filterModalOptions()">
+            </div>
+            <div class="modal-options" id="modalOptions"></div>
+        </div>
+    </div>
+
     <script>
         let currentSession = null;
         let students = [];
+        let currentSelectId = null;
+        let isMobile = window.innerWidth <= 768;
 
         // Set today's date
         document.getElementById('sessionDate').value = new Date().toISOString().split('T')[0];
@@ -156,9 +302,98 @@
         if (!token) {
             window.location.href = 'index.html';
         }
+        
+        // Mobile picker setup
+        if (isMobile) {
+            document.querySelectorAll('.mobile-picker-trigger').forEach(select => {
+                select.style.pointerEvents = 'auto';
+                select.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openModalPicker(this);
+                    return false;
+                });
+                select.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    return false;
+                });
+            });
+        }
+        
+        function openModalPicker(selectElement) {
+            if (!isMobile) return;
+            
+            currentSelectId = selectElement.id;
+            const label = selectElement.previousElementSibling.textContent;
+            const options = Array.from(selectElement.options);
+            const currentValue = selectElement.value;
+            
+            document.getElementById('modalTitle').textContent = `Select ${label}`;
+            document.getElementById('modalSearch').value = '';
+            
+            const modalOptions = document.getElementById('modalOptions');
+            modalOptions.innerHTML = options.map(opt => `
+                <div class="modal-option ${opt.value === currentValue ? 'selected' : ''}" 
+                     data-value="${opt.value}" 
+                     onclick="selectModalOption('${opt.value}')">
+                    ${opt.text}
+                </div>
+            `).join('');
+            
+            document.getElementById('modalPicker').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModalPicker() {
+            document.getElementById('modalPicker').classList.remove('active');
+            document.body.style.overflow = '';
+            currentSelectId = null;
+        }
+        
+        function selectModalOption(value) {
+            if (currentSelectId) {
+                const select = document.getElementById(currentSelectId);
+                select.value = value;
+                
+                // Trigger change event
+                const event = new Event('change', { bubbles: true });
+                select.dispatchEvent(event);
+            }
+            closeModalPicker();
+        }
+        
+        function filterModalOptions() {
+            const searchTerm = document.getElementById('modalSearch').value.toLowerCase();
+            const options = document.querySelectorAll('.modal-option');
+            
+            options.forEach(option => {
+                const text = option.textContent.toLowerCase();
+                option.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        }
+        
+        // Close modal on backdrop click
+        document.getElementById('modalPicker').addEventListener('click', function(e) {
+            if (e.target === this) closeModalPicker();
+        });
+        
+        // Update isMobile on resize
+        window.addEventListener('resize', () => {
+            isMobile = window.innerWidth <= 768;
+        });
 
         // Load time slots on page load
         loadTimeSlots();
+        
+        // Add event listeners for department/semester changes
+        document.getElementById('department').addEventListener('change', loadSubjects);
+        document.getElementById('semester').addEventListener('change', loadSubjects);
+        
+        // Load subjects on page load
+        loadSubjects();
+        
+        // Check for URL parameters and auto-fill form
+        checkURLParameters();
 
         async function createSession() {
             // Validate required fields
@@ -257,7 +492,7 @@
 
         async function loadTimeSlots() {
             try {
-                const response = await fetch('http://localhost:3000/api/v1/attendance/time-slots');
+                const response = await fetch('/api/v1/attendance/time-slots');
                 
                 if (!response.ok) throw new Error('Failed to load time slots');
                 
@@ -277,6 +512,40 @@
             } catch (error) {
                 console.error('Error loading time slots:', error);
                 document.getElementById('timeSlot').innerHTML = '<option value="">Error loading time slots</option>';
+            }
+        }
+        
+        async function loadSubjects() {
+            const department = document.getElementById('department').value;
+            const semester = document.getElementById('semester').value;
+            
+            if (!department || !semester) {
+                document.getElementById('subject').innerHTML = '<option value="">Select Department & Semester first</option>';
+                return;
+            }
+            
+            const departmentMap = { 'CSE': 6, 'ECE': 7, 'ME': 8, 'CE': 5 };
+            const departmentId = departmentMap[department];
+            
+            try {
+                const response = await fetch(`/api/v1/attendance/subjects?departmentId=${departmentId}&semesterId=${semester}`);
+                
+                if (!response.ok) throw new Error('Failed to load subjects');
+                
+                const subjects = await response.json();
+                const select = document.getElementById('subject');
+                
+                if (subjects && subjects.length > 0) {
+                    select.innerHTML = '<option value="">Select Subject</option>' + 
+                        subjects.map(subject => 
+                            `<option value="${subject.course_code}">${subject.course_name} (${subject.course_code})</option>`
+                        ).join('');
+                } else {
+                    select.innerHTML = '<option value="">No subjects available</option>';
+                }
+            } catch (error) {
+                console.error('Error loading subjects:', error);
+                document.getElementById('subject').innerHTML = '<option value="">Error loading subjects</option>';
             }
         }
 
@@ -396,6 +665,49 @@
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             window.location.href = 'index.html';
+        }
+        
+        function checkURLParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            
+            if (urlParams.get('autoCreate') === 'true') {
+                // Pre-fill form with URL parameters
+                if (urlParams.get('date')) document.getElementById('sessionDate').value = urlParams.get('date');
+                if (urlParams.get('department')) document.getElementById('department').value = urlParams.get('department');
+                if (urlParams.get('semester')) document.getElementById('semester').value = urlParams.get('semester');
+                if (urlParams.get('section')) document.getElementById('section').value = urlParams.get('section');
+                if (urlParams.get('timeSlot')) {
+                    // Wait for time slots to load, then select
+                    setTimeout(() => {
+                        document.getElementById('timeSlot').value = urlParams.get('timeSlot');
+                    }, 1000);
+                }
+                
+                // Load subjects for the selected department/semester
+                loadSubjects();
+                
+                // Auto-create session after a short delay
+                setTimeout(() => {
+                    if (urlParams.get('subject')) {
+                        // Wait for subjects to load, then select and create session
+                        const checkSubjects = setInterval(() => {
+                            const subjectSelect = document.getElementById('subject');
+                            if (subjectSelect.options.length > 1) {
+                                // Find and select the subject
+                                for (let option of subjectSelect.options) {
+                                    if (option.value === urlParams.get('subject') || option.text.includes(urlParams.get('subject'))) {
+                                        subjectSelect.value = option.value;
+                                        break;
+                                    }
+                                }
+                                clearInterval(checkSubjects);
+                                // Auto-create session
+                                setTimeout(createSession, 500);
+                            }
+                        }, 500);
+                    }
+                }, 1500);
+            }
         }
 
         // Load user email

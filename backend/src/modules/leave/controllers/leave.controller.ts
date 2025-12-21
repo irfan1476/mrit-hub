@@ -4,10 +4,17 @@ import { LeaveService } from '../services/leave.service';
 import { ApplyLeaveDto } from '../dto/apply-leave.dto';
 import { ApproveLeaveDto } from '../dto/approve-leave.dto';
 import { ApprovalStage } from '../entities/leave-approval.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Faculty } from '../entities/faculty.entity';
 
 @Controller('leave')
 export class LeaveController {
-  constructor(private leaveService: LeaveService) {}
+  constructor(
+    private leaveService: LeaveService,
+    @InjectRepository(Faculty)
+    private facultyRepo: Repository<Faculty>
+  ) {}
 
   // Public endpoints for testing
   @Get('types')
@@ -15,29 +22,21 @@ export class LeaveController {
     return await this.leaveService.getLeaveTypes();
   }
 
-  @Get('demo/balance')
-  async getDemoBalance() {
-    // Return demo balance for faculty ID 1
-    return await this.leaveService.getLeaveBalances(1, 1);
-  }
-
-  @Get('demo/applications')
-  async getDemoApplications() {
-    // Return demo applications for faculty ID 1
-    return await this.leaveService.getMyApplications(1);
-  }
-
-  @Post('demo/apply')
-  async demoApplyLeave(@Body() dto: ApplyLeaveDto) {
-    // Use faculty ID 1 for demo
-    return await this.leaveService.applyLeave(dto, 1);
+  @UseGuards(JwtAuthGuard)
+  @Get('faculty-list')
+  async getFacultyList() {
+    return await this.facultyRepo.find({
+      select: ['id', 'faculty_name', 'employee_id'],
+      where: { active: true },
+      order: { faculty_name: 'ASC' }
+    });
   }
 
   // Protected endpoints
   @UseGuards(JwtAuthGuard)
   @Get('balance')
   async getLeaveBalances(@Request() req, @Query('year') year?: number) {
-    return await this.leaveService.getLeaveBalances(req.user.facultyId, year || 1);
+    return await this.leaveService.getLeaveBalances(req.user.facultyId, year);
   }
 
   @UseGuards(JwtAuthGuard)

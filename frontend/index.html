@@ -6,34 +6,113 @@
     <title>MRIT Hub - Login</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f5f5f5; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
         .container { max-width: 400px; margin: 100px auto; padding: 20px; }
-        .card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .card { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 16px; 
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.5s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
         .logo { text-align: center; margin-bottom: 30px; }
-        .logo h1 { color: #2563eb; font-size: 28px; }
+        .logo img { width: 140px; height: auto; margin-bottom: 20px; }
+        .logo h1 { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 32px;
+            font-weight: 700;
+        }
         .logo p { color: #666; margin-top: 5px; }
         .form-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 5px; color: #333; font-weight: 500; }
-        input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; }
-        input:focus { outline: none; border-color: #2563eb; }
-        .btn { width: 100%; padding: 12px; background: #2563eb; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        .btn:hover { background: #1d4ed8; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            border: 2px solid #ddd; 
+            border-radius: 8px; 
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input:focus { 
+            outline: none; 
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+        .btn { 
+            width: 100%; 
+            padding: 14px; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: 600;
+            cursor: pointer; 
+            margin-top: 10px;
+            transition: all 0.3s;
+        }
+        .btn:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
         .btn:disabled { background: #ccc; cursor: not-allowed; }
         .message { padding: 10px; margin: 10px 0; border-radius: 5px; text-align: center; }
         .success { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
         .error { background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; }
         .tabs { display: flex; margin-bottom: 20px; }
         .tab { flex: 1; padding: 10px; text-align: center; cursor: pointer; border-bottom: 2px solid #ddd; }
-        .tab.active { border-bottom-color: #2563eb; color: #2563eb; font-weight: 500; }
+        .tab.active { border-bottom-color: #667eea; color: #667eea; font-weight: 500; }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
-        .link { color: #2563eb; cursor: pointer; text-decoration: underline; }
+        .link { color: #667eea; cursor: pointer; text-decoration: underline; }
+        
+        /* Toast Notifications */
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: slideIn 0.3s ease;
+            z-index: 1000;
+            max-width: 400px;
+        }
+        .toast.success { border-left: 4px solid #10b981; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        @keyframes slideIn {
+            from { transform: translateX(400px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            to { transform: translateX(400px); opacity: 0; }
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="card">
             <div class="logo">
+                <img src="mrit-logo.jpg" alt="MRIT Logo">
                 <h1>MRIT Hub</h1>
                 <p>College Management System</p>
             </div>
@@ -61,6 +140,9 @@
                 <p style="text-align: center; margin-top: 15px;">
                     <span class="link" onclick="showForgotPassword()">Forgot Password?</span>
                 </p>
+                <div style="background: #e0f2fe; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 14px; text-align: center;">
+                    <strong>Faculty Login:</strong> <code>faculty@mrit.ac.in</code> / <code>password123</code>
+                </div>
             </div>
 
             <!-- Register Form -->
@@ -89,12 +171,24 @@
     </div>
 
     <script>
-        const API_BASE = 'http://localhost:3000/api/v1';
+        const API_BASE = '/api/v1';
 
         function showMessage(message, type = 'success') {
-            const messageDiv = document.getElementById('message');
-            messageDiv.innerHTML = `<div class="${type}">${message}</div>`;
-            setTimeout(() => messageDiv.innerHTML = '', 5000);
+            // Remove existing toasts
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+            
+            // Create toast
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? '✓' : '✕';
+            toast.innerHTML = `<span style="font-size: 20px;">${icon}</span><span>${message}</span>`;
+            document.body.appendChild(toast);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
 
         function showTab(tabName) {
@@ -117,7 +211,9 @@
                 const response = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ email, password }),
+                    mode: 'cors',
+                    credentials: 'include'
                 });
 
                 const data = await response.json();
@@ -126,9 +222,9 @@
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('refreshToken', data.refreshToken);
                     showMessage('Login successful! Redirecting to dashboard...', 'success');
-                    setTimeout(() => window.location.href = 'dashboard.html', 1500);
+                    setTimeout(() => window.location.href = '/dashboard.html', 1500);
                 } else {
-                    showMessage(data.message || 'Login failed', 'error');
+                    showMessage(data.message || 'Login failed. Use faculty@mrit.ac.in / password123', 'error');
                 }
             } catch (error) {
                 showMessage('Network error. Please try again.', 'error');

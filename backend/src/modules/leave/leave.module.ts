@@ -6,6 +6,8 @@ import { LeaveType } from './entities/leave-type.entity';
 import { LeaveBalance } from './entities/leave-balance.entity';
 import { LeaveApplication } from './entities/leave-application.entity';
 import { LeaveApproval } from './entities/leave-approval.entity';
+import { Faculty } from './entities/faculty.entity';
+import { AcademicYear } from './entities/academic-year.entity';
 
 @Module({
   imports: [
@@ -14,6 +16,8 @@ import { LeaveApproval } from './entities/leave-approval.entity';
       LeaveBalance,
       LeaveApplication,
       LeaveApproval,
+      Faculty,
+      AcademicYear,
     ]),
   ],
   controllers: [LeaveController],

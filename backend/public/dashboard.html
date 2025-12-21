@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Faculty Dashboard - MRIT Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; }
+        
+        .header { background: #1e40af; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .profile-pic { width: 50px; height: 50px; border-radius: 50%; background: #3b82f6; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        .faculty-info h2 { font-size: 1.2rem; margin-bottom: 0.25rem; }
+        .faculty-info p { font-size: 0.9rem; opacity: 0.9; }
+        .header-right { display: flex; align-items: center; gap: 1rem; }
+        .date-display { font-size: 0.9rem; opacity: 0.9; }
+        
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem 1rem; }
+        
+        .quick-actions { background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .quick-actions h3 { margin-bottom: 1rem; color: #1e40af; }
+        .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+        .action-btn { background: #3b82f6; color: white; padding: 1rem; border-radius: 8px; text-decoration: none; text-align: center; font-weight: 500; transition: all 0.3s; }
+        .action-btn:hover { background: #2563eb; transform: translateY(-2px); }
+        .action-btn.secondary { background: #10b981; }
+        .action-btn.warning { background: #f59e0b; }
+        
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2rem; }
+        
+        .card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .card h3 { color: #1e40af; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        
+        .timetable-card { grid-column: 1; }
+        .timetable-header { display: flex; justify-content: between; align-items: center; margin-bottom: 1rem; }
+        .date-selector { padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 6px; }
+        
+        .timetable { display: grid; grid-template-columns: 80px repeat(6, 1fr); gap: 1px; background: #e5e7eb; border-radius: 8px; overflow: hidden; }
+        .time-header, .period-slot { background: white; padding: 0.75rem 0.5rem; text-align: center; font-size: 0.85rem; }
+        .time-header { background: #1e40af; color: white; font-weight: 600; }
+        .period-slot.current { background: #fef3c7; border-left: 4px solid #f59e0b; }
+        .period-slot.upcoming { background: #ecfdf5; border-left: 4px solid #10b981; }
+        .period-slot.free { background: #f9fafb; color: #6b7280; }
+        
+        .subject-info { font-weight: 600; color: #1e40af; margin-bottom: 0.25rem; }
+        .class-info { font-size: 0.75rem; color: #6b7280; }
+        .substitute-info { font-size: 0.75rem; color: #dc2626; font-style: italic; }
+        
+        .sidebar { grid-column: 2; display: flex; flex-direction: column; gap: 2rem; }
+        
+        .leave-overview { }
+        .leave-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem; }
+        .stat-card { background: #f8fafc; padding: 1rem; border-radius: 8px; text-align: center; }
+        .stat-number { font-size: 1.5rem; font-weight: bold; color: #1e40af; }
+        .stat-label { font-size: 0.8rem; color: #6b7280; margin-top: 0.25rem; }
+        
+        .leave-balance { margin-bottom: 1rem; }
+        .balance-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #e5e7eb; }
+        .balance-item:last-child { border-bottom: none; }
+        
+        .recent-leave { background: #f8fafc; padding: 1rem; border-radius: 8px; }
+        
+        .approvals-center { }
+        .approval-item { background: #fef3c7; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; border-left: 4px solid #f59e0b; }
+        .approval-item.hod { background: #ecfdf5; border-left-color: #10b981; }
+        .approval-actions { display: flex; gap: 0.5rem; margin-top: 0.5rem; }
+        .approve-btn { background: #10b981; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; }
+        .reject-btn { background: #ef4444; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; }
+        
+        .bottom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+        
+        .notices-list { }
+        .notice-item { padding: 1rem; border-bottom: 1px solid #e5e7eb; }
+        .notice-item:last-child { border-bottom: none; }
+        .notice-date { font-size: 0.8rem; color: #6b7280; }
+        .notice-title { font-weight: 600; color: #1e40af; margin: 0.25rem 0; }
+        
+        .gallery { }
+        .gallery-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+        .gallery-item { aspect-ratio: 1; background: #e5e7eb; border-radius: 6px; }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .bottom-grid { grid-template-columns: 1fr; }
+            .timetable { grid-template-columns: 60px repeat(3, 1fr); }
+            .actions-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="profile-pic" id="profilePic">DS</div>
+            <div class="faculty-info">
+                <h2 id="facultyGreeting">Good Afternoon, Dr. Smith</h2>
+                <p id="facultyDetails">Computer Science Department • Professor • EMP001</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div class="date-display" id="currentDate">Monday, 2nd December 2025</div>
+            <div class="profile-dropdown">
+                <button class="action-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Quick Actions Bar -->
+        <div class="quick-actions">
+            <h3>Quick Actions</h3>
+            <div class="actions-grid">
+                <a href="leave.html" class="action-btn">Apply Leave</a>
+                <a href="#" class="action-btn secondary" id="approveBtn" onclick="showApprovals()">Approve Requests</a>
+                <a href="leave.html#view" class="action-btn">Leave History</a>
+                <a href="attendance.html" class="action-btn warning">Mark Attendance</a>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Today's Teaching Schedule -->
+            <div class="card timetable-card">
+                <div class="timetable-header">
+                    <h3>📅 Today's Teaching Schedule</h3>
+                    <input type="date" class="date-selector" id="scheduleDate" onchange="loadSchedule()">
+                </div>
+                
+                <div class="timetable" id="timetable">
+                    <div class="time-header">Time</div>
+                    <div class="time-header">9:15 AM</div>
+                    <div class="time-header">10:15 AM</div>
+                    <div class="time-header">11:30 AM</div>
+                    <div class="time-header">12:30 PM</div>
+                    <div class="time-header">2:30 PM</div>
+                    <div class="time-header">3:30 PM</div>
+                    
+                    <div class="time-header">Today</div>
+                    <div class="period-slot current">
+                        <div class="subject-info">CSE - 3RD SEM - A</div>
+                        <div class="class-info">Project Management with Git</div>
+                    </div>
+                    <div class="period-slot">
+                        <div class="subject-info">CSE - 3RD SEM - A</div>
+                        <div class="class-info">Project Management with Git</div>
+                    </div>
+                    <div class="period-slot upcoming">
+                        <div class="subject-info">ISE - 3RD SEM - A</div>
+                        <div class="class-info">Project Management with Git</div>
+                        <div class="substitute-info">Starts in 15 min</div>
+                    </div>
+                    <div class="period-slot">
+                        <div class="subject-info">ISE - 3RD SEM - A</div>
+                        <div class="class-info">Project Management with Git</div>
+                    </div>
+                    <div class="period-slot">
+                        <div class="subject-info">CSE - 5TH SEM - B</div>
+                        <div class="class-info">AWS/GenAI</div>
+                    </div>
+                    <div class="period-slot">
+                        <div class="subject-info">CSE - 5TH SEM - A</div>
+                        <div class="class-info">AWS/GenAI</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <!-- Leave Overview -->
+                <div class="card leave-overview">
+                    <h3>🏖️ Leave Overview</h3>
+                    
+                    <div class="leave-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="pendingLeaves">1</div>
+                            <div class="stat-label">Pending</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="approvedLeaves">4</div>
+                            <div class="stat-label">Approved</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="rejectedLeaves">0</div>
+                            <div class="stat-label">Rejected</div>
+                        </div>
+                    </div>
+
+                    <div class="leave-balance">
+                        <h4>Balance:</h4>
+                        <div class="balance-item">
+                            <span>Casual Leave (CL)</span>
+                            <span><strong>7/12</strong></span>
+                        </div>
+                        <div class="balance-item">
+                            <span>Earned Leave (EL)</span>
+                            <span><strong>18/30</strong></span>
+                        </div>
+                        <div class="balance-item">
+                            <span>Off-Campus</span>
+                            <span><strong>Unlimited</strong></span>
+                        </div>
+                    </div>
+
+                    <div class="recent-leave">
+                        <h4>Last Update:</h4>
+                        <p>• Casual Leave | <strong>Approved</strong> | 2 Dec 2025</p>
+                    </div>
+                </div>
+
+                <!-- Approvals Center -->
+                <div class="card approvals-center">
+                    <h3>⚡ Approvals Center</h3>
+                    
+                    <div id="substituteApprovals">
+                        <div class="approval-item">
+                            <strong>Substitute Request</strong>
+                            <p>Dr. Johnson - Casual Leave</p>
+                            <p>Date: 15-16 Dec 2025</p>
+                            <p>Reason: Personal work</p>
+                            <div class="approval-actions">
+                                <button class="approve-btn" onclick="approveSubstitute(1)">Accept</button>
+                                <button class="reject-btn" onclick="rejectSubstitute(1)">Reject</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="hodApprovals">
+                        <div class="approval-item hod">
+                            <strong>HOD Approval Required</strong>
+                            <p>Prof. Davis - Earned Leave</p>
+                            <p>Date: 1-5 Feb 2025 (5 days)</p>
+                            <p>Substitute: <span style="color: #10b981;">Approved</span></p>
+                            <div class="approval-actions">
+                                <button class="approve-btn" onclick="approveHOD(1)">Approve</button>
+                                <button class="reject-btn" onclick="rejectHOD(1)">Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-grid">
+            <!-- Notices -->
+            <div class="card notices-list">
+                <h3>📢 Notices</h3>
+                <div class="notice-item">
+                    <div class="notice-date">9th Aug 2025 | 1:18:47 am</div>
+                    <div class="notice-title">Parent/Student Circular Announcement</div>
+                    <p>Dear Parent/Student, A circular has been announced. Please click on the link to view institution details.</p>
+                </div>
+                <div class="notice-item">
+                    <div class="notice-date">5th Aug 2025 | 10:30:00 am</div>
+                    <div class="notice-title">Faculty Meeting Schedule</div>
+                    <p>All faculty members are requested to attend the monthly meeting on 10th Aug 2025.</p>
+                </div>
+                <button class="action-btn" style="width: 100%; margin-top: 1rem;">View More</button>
+            </div>
+
+            <!-- Gallery -->
+            <div class="card gallery">
+                <h3>🖼️ Gallery</h3>
+                <div class="gallery-grid">
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                    <div class="gallery-item"></div>
+                </div>
+                <button class="action-btn" style="width: 100%; margin-top: 1rem;">Open Gallery</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        let currentUser = null;
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
+            setCurrentDate();
+            loadTodaySchedule();
+            loadLeaveOverview();
+            loadApprovals();
+        });
+
+        function setCurrentDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = now.toLocaleDateString('en-US', options);
+            document.getElementById('scheduleDate').value = now.toISOString().split('T')[0];
+        }
+
+        async function loadUserInfo() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/faculty-info`);
+                if (response.ok) {
+                    currentUser = await response.json();
+                } else {
+                    // Fallback mock data
+                    currentUser = {
+                        name: 'Dr. Smith',
+                        department: 'Computer Science Department',
+                        designation: 'Professor',
+                        employeeCode: 'EMP001',
+                        role: 'FACULTY'
+                    };
+                }
+
+                const greeting = getGreeting();
+                document.getElementById('facultyGreeting').textContent = `${greeting}, ${currentUser.name}`;
+                document.getElementById('facultyDetails').textContent = 
+                    `${currentUser.department} • ${currentUser.designation} • ${currentUser.employeeCode}`;
+                
+                // Set profile initials
+                const initials = currentUser.name.split(' ').map(n => n[0]).join('');
+                document.getElementById('profilePic').textContent = initials;
+
+                // Show/hide approve button based on role
+                if (currentUser.role !== 'HOD' && currentUser.role !== 'SUBSTITUTE') {
+                    document.getElementById('approveBtn').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading user info:', error);
+                // Use fallback data on error
+                loadUserInfo();
+            }
+        }
+
+        function getGreeting() {
+            const hour = new Date().getHours();
+            if (hour < 12) return 'Good Morning';
+            if (hour < 17) return 'Good Afternoon';
+            return 'Good Evening';
+        }
+
+        async function loadTodaySchedule() {
+            try {
+                const date = document.getElementById('scheduleDate').value;
+                const response = await fetch(`${API_BASE}/dashboard/today-schedule?date=${date}`);
+                
+                if (response.ok) {
+                    const schedule = await response.json();
+                    updateTimetableDisplay(schedule);
+                } else {
+                    // Fallback to static display
+                    console.log('Using static schedule display');
+                }
+            } catch (error) {
+                console.error('Error loading schedule:', error);
+            }
+        }
+
+        function updateTimetableDisplay(schedule) {
+            // Timetable is already rendered in HTML for demo
+            // In production, this would dynamically generate the timetable
+        }
+
+        async function loadLeaveOverview() {
+            try {
+                const response = await fetch(`${API_BASE}/dashboard/leave-overview`);
+                
+                if (response.ok) {
+                    const leaveData = await response.json();
+                    
+                    document.getElementById('pendingLeaves').textContent = leaveData.stats.pending;
+                    document.getElementById('approvedLeaves').textContent = leaveData.stats.approved;
+                    document.getElementById('rejectedLeaves').textContent = leaveData.stats.rejected;
+                    
+                    // Update balance display if needed
+                    updateLeaveBalanceDisplay(leaveData.balances);
+                } else {
+                    // Use default values
+                    document.getElementById('pendingLeaves').textContent = '1';
+                    document.getElementById('approvedLeaves').textContent = '4';
+                    document.getElementById('rejectedLeaves').textContent = '0';
+                }
+            } catch (error) {
+                console.error('Error loading leave overview:', error);
+            }
+        }
+
+        function updateLeaveBalanceDisplay(balances) {
+            // Update balance display dynamically if needed
+            // For now, using static HTML display
+        }
+
+        async function loadApprovals() {
+            try {
+                // Mock approval data - in production, fetch from approvals API
+                // This would be role-based and only show relevant approvals
+            } catch (error) {
+                console.error('Error loading approvals:', error);
+            }
+        }
+
+        function loadSchedule() {
+            loadTodaySchedule();
+        }
+
+        function showApprovals() {
+            // Navigate to approvals section or modal
+            document.querySelector('.approvals-center').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function approveSubstitute(id) {
+            if (confirm('Approve this substitute request?')) {
+                // API call to approve substitute
+                alert('Substitute request approved!');
+                loadApprovals(); // Refresh
+            }
+        }
+
+        function rejectSubstitute(id) {
+            if (confirm('Reject this substitute request?')) {
+                // API call to reject substitute
+                alert('Substitute request rejected!');
+                loadApprovals(); // Refresh
+            }
+        }
+
+        function approveHOD(id) {
+            if (confirm('Approve this leave application?')) {
+                // API call to approve as HOD
+                alert('Leave application approved!');
+                loadApprovals(); // Refresh
+            }
+        }
+
+        function rejectHOD(id) {
+            const reason = prompt('Reason for rejection (optional):');
+            if (reason !== null) {
+                // API call to reject as HOD with reason
+                alert('Leave application rejected!');
+                loadApprovals(); // Refresh
+            }
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>

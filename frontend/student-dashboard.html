@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard - MRIT Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8fafc; }
+        .header { background: #1e40af; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: white; border-radius: 12px; padding: 2rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center; }
+        .btn { background: #3b82f6; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; margin: 0.5rem; }
+        .btn:hover { background: #2563eb; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MRIT Hub - Student Portal</h1>
+        <button class="btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>🎓 Student Dashboard</h2>
+            <p style="margin: 2rem 0;">Welcome to the MRIT Hub Student Portal!</p>
+            <p style="margin-bottom: 2rem;">Student features are coming soon. This will include:</p>
+            <ul style="text-align: left; max-width: 400px; margin: 0 auto 2rem;">
+                <li>View your attendance records</li>
+                <li>Check academic progress</li>
+                <li>Access course materials</li>
+                <li>View announcements</li>
+                <li>Submit assignments</li>
+            </ul>
+            <a href="/attendance.html" class="btn">View My Attendance</a>
+            <a href="/index.html" class="btn">Back to Login</a>
+        </div>
+    </div>
+
+    <script>
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+            window.location.href = '/index.html';
+        }
+    </script>
+</body>
+</html>
