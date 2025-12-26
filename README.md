@@ -50,6 +50,8 @@ A comprehensive, locally-hosted college management system with attendance tracki
 - Node.js 20+ (for local development)
 - Git
 
+**Windows Users**: See [WINDOWS-SETUP.md](WINDOWS-SETUP.md) for detailed Windows instructions.
+
 ### Setup
 
 1. **Clone repository**:
@@ -61,37 +63,59 @@ cd mrit-hub
 2. **Configure environment**:
 ```bash
 cp .env.example .env
-# Edit .env with your credentials:
-# - JWT_SECRET
-# - SMS_GATEWAY_URL
-# - SMS_GATEWAY_API_KEY
-# - JWT_SECRET
+# Edit .env with your credentials
+# IMPORTANT: Ensure DATABASE_URL uses 'postgres' as hostname:
+# DATABASE_URL="postgresql://mrit_admin:password@postgres:5432/mrit_hub"
 ```
 
 3. **Start all services**:
 ```bash
+# Unix/Mac/Linux
 ./start.sh
-# Or manually: docker-compose up -d
+
+# Windows
+start.bat
+
+# Or manually
+docker-compose up -d
 ```
 
-4. **Verify services**:
+4. **Deploy frontend** (after services start):
+```bash
+# Unix/Mac/Linux
+./deploy-frontend.sh
+
+# Windows
+deploy-frontend.bat
+
+# Or manually
+cd frontend
+docker cp index.html mrit-nginx:/usr/share/nginx/html/
+docker cp dashboard.html mrit-nginx:/usr/share/nginx/html/
+docker cp dashboard.js mrit-nginx:/usr/share/nginx/html/
+docker cp attendance.html mrit-nginx:/usr/share/nginx/html/
+docker cp leave.html mrit-nginx:/usr/share/nginx/html/
+docker cp mrit-logo.jpg mrit-nginx:/usr/share/nginx/html/
+```
+
+5. **Verify services**:
 ```bash
 docker-compose ps
 # All services should show "Up" or "healthy"
 ```
 
-5. **Check database**:
-```bash
-docker exec -it mrit-postgres psql -U mrit_admin -d mrit_hub -c "\dt"
-# Should list 34 tables
-```
-
 ### Access Points
 
+- **Frontend**: http://localhost:8080 (Nginx)
+- **Login Page**: http://localhost:8080/index.html
+- **Dashboard**: http://localhost:8080/dashboard.html
 - **Backend API**: http://localhost:3000
-- **Nginx Proxy**: http://localhost:80
 - **PostgreSQL**: localhost:5432
 - **Redis**: localhost:6379
+
+**Test Credentials**:
+- Email: `faculty@mysururoyal.org`
+- Password: `password123`
 
 ## 📊 Database
 

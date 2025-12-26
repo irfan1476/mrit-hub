@@ -11,7 +11,7 @@
    - Download: https://git-scm.com/download/win
    - Use default settings during installation
 
-## Deployment Steps
+## Quick Start
 
 ### 1. Clone Repository
 
@@ -33,49 +33,50 @@ copy .env.example .env
 notepad .env
 ```
 
-Update these values in `.env`:
+**IMPORTANT**: Ensure `DATABASE_URL` uses `postgres` as hostname:
 ```
-JWT_SECRET=your-secret-key-here
-SMS_GATEWAY_URL=your-sms-gateway-url
-SMS_GATEWAY_API_KEY=your-api-key
-DATABASE_URL=postgresql://mrit_admin:mrit_secure_2024@postgres:5432/mrit_hub
+DATABASE_URL="postgresql://mrit_admin:mrit_secure_pass_2024@postgres:5432/mrit_hub"
 ```
 
-### 3. Start Services
+### 3. Start Application
 
 ```powershell
-# Start all services
+# Using batch script (recommended)
+start.bat
+
+# OR manually
 docker-compose up -d
-
-# Check status
-docker-compose ps
-
-# View logs
-docker-compose logs -f
 ```
 
-### 4. Verify Installation
+### 4. Deploy Frontend
+
+Wait 30 seconds for services to start, then:
 
 ```powershell
-# Check database tables
-docker exec mrit-postgres psql -U mrit_admin -d mrit_hub -c "\dt"
+# Using batch script
+deploy-frontend.bat
 
-# Test backend API
-curl http://localhost:3000/api/v1/health
-
-# Or open in browser
-start http://localhost:8080/admin.html
+# OR manually
+cd frontend
+docker cp index.html mrit-nginx:/usr/share/nginx/html/
+docker cp dashboard.html mrit-nginx:/usr/share/nginx/html/
+docker cp dashboard.js mrit-nginx:/usr/share/nginx/html/
+docker cp attendance.html mrit-nginx:/usr/share/nginx/html/
+docker cp leave.html mrit-nginx:/usr/share/nginx/html/
+docker cp mrit-logo.jpg mrit-nginx:/usr/share/nginx/html/
+cd ..
 ```
 
-### 5. Access Points
+### 5. Access Application
 
-- **Admin Panel**: http://localhost:8080/admin.html
+- **Frontend**: http://localhost:8080
+- **Login**: http://localhost:8080/index.html
 - **Backend API**: http://localhost:3000
 - **Database**: localhost:5432
 
-**Admin Login:**
-- Email: `admin@mrit.ac.in`
-- Password: `admin123`
+**Login Credentials:**
+- Email: `faculty@mysururoyal.org`
+- Password: `password123`
 
 ## Windows-Specific Commands
 
@@ -147,10 +148,16 @@ npm run start:dev
 
 ```powershell
 # Edit files in frontend\ folder
-# Then copy to nginx container
-docker cp frontend\admin.html mrit-nginx:/usr/share/nginx/html/
-docker cp frontend\admin-panel.html mrit-nginx:/usr/share/nginx/html/
-docker cp frontend\config.js mrit-nginx:/usr/share/nginx/html/
+# Then run deployment script
+deploy-frontend.bat
+
+# OR copy manually
+docker cp frontend\index.html mrit-nginx:/usr/share/nginx/html/
+docker cp frontend\dashboard.html mrit-nginx:/usr/share/nginx/html/
+docker cp frontend\dashboard.js mrit-nginx:/usr/share/nginx/html/
+docker cp frontend\attendance.html mrit-nginx:/usr/share/nginx/html/
+docker cp frontend\leave.html mrit-nginx:/usr/share/nginx/html/
+docker cp frontend\mrit-logo.jpg mrit-nginx:/usr/share/nginx/html/
 ```
 
 ## Backup & Restore
