@@ -46,9 +46,15 @@ npm run build                 # Build for production
 
 ### UI Testing
 ```bash
-./test-ui-systems.sh          # Test attendance & leave systems
-curl http://localhost:3000/api/v1/attendance/time-slots  # Test time slots
-curl http://localhost:3000/api/v1/leave/types            # Test leave types
+# Open in browser
+open http://localhost/index.html              # Login page
+open http://localhost/dashboard.html          # Dashboard (after login)
+open http://localhost/attendance.html         # Attendance
+open http://localhost/leave.html              # Leave management
+
+# Test APIs
+curl http://localhost:3000/api/v1/attendance/time-slots  # Time slots
+curl http://localhost:3000/api/v1/leave/types            # Leave types
 ```
 
 ### Git Commands
@@ -75,9 +81,12 @@ git log --oneline             # View commit history
 
 | Service | URL | Credentials |
 |---------|-----|-------------|
+| Frontend | http://localhost/ | - |
+| Login Page | http://localhost/index.html | faculty@mrit.ac.in / password123 |
+| Dashboard | http://localhost/dashboard.html | (after login) |
+| Attendance UI | http://localhost/attendance.html | (after login) |
+| Leave Management UI | http://localhost/leave.html | (after login) |
 | Backend API | http://localhost:3000 | - |
-| Attendance UI | http://localhost:3000/attendance.html | - |
-| Leave Management UI | http://localhost:3000/leave.html | - |
 | Nginx Proxy | http://localhost:80 | - |
 | PostgreSQL | localhost:5432 | mrit_admin / (see .env) |
 | Redis | localhost:6379 | - |
