@@ -141,7 +141,11 @@
                     <span class="link" onclick="showForgotPassword()">Forgot Password?</span>
                 </p>
                 <div style="background: #e0f2fe; padding: 10px; border-radius: 5px; margin-top: 15px; font-size: 14px; text-align: center;">
-                    <strong>Faculty Login:</strong> <code>faculty@mrit.ac.in</code> / <code>password123</code>
+                    <strong>Available Users:</strong><br>
+                    <code>faculty@mysururoyal.org</code><br>
+                    <code>test.faculty@mysururoyal.org</code><br>
+                    <code>admin@mysururoyal.org</code><br>
+                    <small>Contact admin for passwords</small>
                 </div>
             </div>
 
@@ -221,10 +225,17 @@
                 if (response.ok) {
                     localStorage.setItem('accessToken', data.accessToken);
                     localStorage.setItem('refreshToken', data.refreshToken);
-                    showMessage('Login successful! Redirecting to dashboard...', 'success');
-                    setTimeout(() => window.location.href = '/dashboard.html', 1500);
+                    
+                    // Check user role and redirect accordingly
+                    if (data.user.role === 'ADMIN') {
+                        showMessage('Admin login successful! Redirecting to admin panel...', 'success');
+                        setTimeout(() => window.location.href = '/admin-panel.html', 1500);
+                    } else {
+                        showMessage('Login successful! Redirecting to dashboard...', 'success');
+                        setTimeout(() => window.location.href = '/dashboard.html', 1500);
+                    }
                 } else {
-                    showMessage(data.message || 'Login failed. Use faculty@mrit.ac.in / password123', 'error');
+                    showMessage(data.message || 'Login failed. Check email domain @mysururoyal.org', 'error');
                 }
             } catch (error) {
                 showMessage('Network error. Please try again.', 'error');
