@@ -35,8 +35,8 @@ BEGIN
     -- Create timetable entries for Monday (day 1) - 6 periods
     FOR co_id IN (SELECT id FROM course_offering LIMIT 6) LOOP
         FOR slot IN 1..6 LOOP
-            INSERT INTO timetable (course_offering_id, time_slot_id, day_of_week, room_number, active)
-            VALUES (co_id, slot, 1, 'Room ' || (100 + slot), true)
+            INSERT INTO timetable (course_offering_id, time_slot_id, day_of_week, room_number, effective_from, effective_to, active)
+            VALUES (co_id, slot, 1, 'Room ' || (100 + slot), CURRENT_DATE, CURRENT_DATE + INTERVAL '6 months', true)
             ON CONFLICT DO NOTHING;
         END LOOP;
     END LOOP;
@@ -44,8 +44,8 @@ BEGIN
     -- Create timetable entries for Thursday (day 4) - 6 periods
     FOR co_id IN (SELECT id FROM course_offering OFFSET 1 LIMIT 6) LOOP
         FOR slot IN 1..6 LOOP
-            INSERT INTO timetable (course_offering_id, time_slot_id, day_of_week, room_number, active)
-            VALUES (co_id, slot, 4, 'Room ' || (400 + slot), true)
+            INSERT INTO timetable (course_offering_id, time_slot_id, day_of_week, room_number, effective_from, effective_to, active)
+            VALUES (co_id, slot, 4, 'Room ' || (400 + slot), CURRENT_DATE, CURRENT_DATE + INTERVAL '6 months', true)
             ON CONFLICT DO NOTHING;
         END LOOP;
     END LOOP;
