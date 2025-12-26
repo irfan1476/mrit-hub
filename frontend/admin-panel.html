@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - MRIT Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f5f5f5; }
+        .header { background: #2c3e50; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .nav { background: #34495e; padding: 0.5rem; display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+        .nav button { background: #3498db; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
+        .nav button.active { background: #e74c3c; }
+        .container { max-width: 1400px; margin: 2rem auto; padding: 0 1rem; }
+        .card { background: white; border-radius: 8px; padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .btn { background: #3498db; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin-right: 0.5rem; }
+        .btn-success { background: #27ae60; }
+        .btn-danger { background: #e74c3c; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.875rem; }
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #ddd; }
+        .table th { background: #f8f9fa; }
+        .hidden { display: none; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
+        .modal.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background: white; padding: 2rem; border-radius: 8px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 1rem; }
+        .modal-close { font-size: 1.5rem; cursor: pointer; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; font-weight: bold; }
+        .form-group input, .form-group select { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
+        .success { color: #27ae60; background: #f0f9f4; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+        .error { color: #e74c3c; background: #fdf2f2; padding: 1rem; border-radius: 4px; margin: 1rem 0; }
+    </style>
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 MRIT Hub - Admin Panel</h1>
+        <div>
+            <span id="admin-user" style="margin-right: 1rem;"></span>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+    </div>
+
+    <div class="nav">
+        <button onclick="showSection('departments')" id="btn-departments">DEPARTMENTS</button>
+        <button onclick="showSection('designations')" id="btn-designations">DESIGNATIONS</button>
+        <button onclick="showSection('faculty')" id="btn-faculty">FACULTY</button>
+        <button onclick="showSection('leave-types')" id="btn-leave-types">LEAVE TYPES</button>
+        <button onclick="showSection('academic-years')" id="btn-academic-years">ACADEMIC YEARS</button>
+    </div>
+
+    <div class="container">
+        <div id="section-departments" class="card">
+            <div class="card-header">
+                <h2>Departments</h2>
+                <button class="btn btn-success" onclick="openModal('department')">+ Add</button>
+            </div>
+            <table class="table">
+                <thead><tr><th>Code</th><th>Name</th><th>Actions</th></tr></thead>
+                <tbody id="departments-list"></tbody>
+            </table>
+        </div>
+
+        <div id="section-designations" class="card hidden">
+            <div class="card-header">
+                <h2>Designations</h2>
+                <button class="btn btn-success" onclick="openModal('designation')">+ Add</button>
+            </div>
+            <table class="table">
+                <thead><tr><th>ID</th><th>Name</th><th>Actions</th></tr></thead>
+                <tbody id="designations-list"></tbody>
+            </table>
+        </div>
+
+        <div id="section-faculty" class="card hidden">
+            <div class="card-header">
+                <h2>Faculty</h2>
+                <button class="btn btn-success" onclick="openModal('faculty')">+ Add</button>
+            </div>
+            <table class="table">
+                <thead><tr><th>Name</th><th>Employee ID</th><th>Dept</th><th>Phone</th><th>Actions</th></tr></thead>
+                <tbody id="faculty-list"></tbody>
+            </table>
+        </div>
+
+        <div id="section-leave-types" class="card hidden">
+            <div class="card-header">
+                <h2>Leave Types</h2>
+                <button class="btn btn-success" onclick="openModal('leave-type')">+ Add</button>
+            </div>
+            <table class="table">
+                <thead><tr><th>Name</th><th>Code</th><th>Max Days</th><th>Actions</th></tr></thead>
+                <tbody id="leave-types-list"></tbody>
+            </table>
+        </div>
+
+        <div id="section-academic-years" class="card hidden">
+            <div class="card-header">
+                <h2>Academic Years</h2>
+                <button class="btn btn-success" onclick="openModal('academic-year')">+ Add</button>
+            </div>
+            <table class="table">
+                <thead><tr><th>Year</th><th>Actions</th></tr></thead>
+                <tbody id="academic-years-list"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add Item</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <form id="modal-form"></form>
+        </div>
+    </div>
+
+    <script>
+        if (!sessionStorage.getItem('adminLoggedIn')) window.location.href = 'admin.html';
+        document.getElementById('admin-user').textContent = 'User: ' + sessionStorage.getItem('adminUser');
+
+        const API = CONFIG.API_BASE_URL;
+        let entity = '', id = null, depts = [], desigs = [];
+
+        function logout() {
+            sessionStorage.clear();
+            window.location.href = 'admin.html';
+        }
+
+        function showSection(s) {
+            document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('[id^="btn-"]').forEach(el => el.classList.remove('active'));
+            document.getElementById(`section-${s}`).classList.remove('hidden');
+            document.getElementById(`btn-${s}`).classList.add('active');
+            if (s === 'departments') loadDepartments();
+            if (s === 'designations') loadDesignations();
+            if (s === 'faculty') loadFaculty();
+            if (s === 'leave-types') loadLeaveTypes();
+            if (s === 'academic-years') loadAcademicYears();
+        }
+
+        function openModal(e, i = null) {
+            entity = e; id = i;
+            document.getElementById('modal-title').textContent = i ? `Edit ${e}` : `Add ${e}`;
+            document.getElementById('modal-form').innerHTML = getForm(e);
+            document.getElementById('modal').classList.add('show');
+            if (i) loadItem(e, i);
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        function getForm(e) {
+            const forms = {
+                'department': '<div class="form-group"><label>Code</label><input id="code" required></div><div class="form-group"><label>Name</label><input id="dept_name" required></div><button type="submit" class="btn">Save</button>',
+                'designation': '<div class="form-group"><label>Name</label><input id="des_name" required></div><button type="submit" class="btn">Save</button>',
+                'faculty': '<div class="form-group"><label>Name</label><input id="faculty_name" required></div><div class="form-group"><label>Employee ID</label><input id="employee_id"></div><div class="form-group"><label>Phone</label><input id="phone"></div><button type="submit" class="btn">Save</button>',
+                'leave-type': '<div class="form-group"><label>Name</label><input id="name" required></div><div class="form-group"><label>Code</label><input id="code" required></div><div class="form-group"><label>Max Days</label><input type="number" id="max_days_per_year"></div><button type="submit" class="btn">Save</button>',
+                'academic-year': '<div class="form-group"><label>Year</label><input id="yr" required placeholder="2024-25"></div><button type="submit" class="btn">Save</button>'
+            };
+            return forms[e] || '';
+        }
+
+        async function loadItem(e, i) {
+            const map = {'department':'departments','designation':'designations','faculty':'faculty','leave-type':'leave-types','academic-year':'academic-years'};
+            const data = await fetch(`${API}/admin/${map[e]}`).then(r => r.json());
+            const item = data.find(x => x.id == i);
+            if (item) Object.keys(item).forEach(k => {
+                const el = document.getElementById(k);
+                if (el) el.value = item[k] || '';
+            });
+        }
+
+        document.getElementById('modal-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {};
+            this.querySelectorAll('input, select').forEach(i => {
+                if (i.id && i.value) data[i.id] = i.type === 'number' ? parseFloat(i.value) : i.value;
+            });
+            const map = {'department':'departments','designation':'designations','faculty':'faculty','leave-type':'leave-types','academic-year':'academic-years'};
+            const url = id ? `${API}/admin/${map[entity]}/${id}` : `${API}/admin/${map[entity]}`;
+            const res = await fetch(url, {method: id ? 'PUT' : 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)});
+            if (res.ok) {
+                alert('Saved!');
+                closeModal();
+                showSection(map[entity]);
+            } else alert('Error saving');
+        });
+
+        async function deleteItem(e, i) {
+            if (!confirm('Delete?')) return;
+            const map = {'department':'departments','designation':'designations','faculty':'faculty','leave-type':'leave-types','academic-year':'academic-years'};
+            const res = await fetch(`${API}/admin/${map[e]}/${i}`, {method: 'DELETE'});
+            if (res.ok) {
+                alert('Deleted!');
+                showSection(map[e]);
+            }
+        }
+
+        async function loadDepartments() {
+            depts = await fetch(`${API}/admin/departments`).then(r => r.json());
+            document.getElementById('departments-list').innerHTML = depts.map(d => `
+                <tr><td>${d.code}</td><td>${d.dept_name}</td><td>
+                    <button class="btn btn-sm" onclick="openModal('department',${d.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem('department',${d.id})">Delete</button>
+                </td></tr>
+            `).join('');
+        }
+
+        async function loadDesignations() {
+            desigs = await fetch(`${API}/admin/designations`).then(r => r.json());
+            document.getElementById('designations-list').innerHTML = desigs.map(d => `
+                <tr><td>${d.id}</td><td>${d.des_name}</td><td>
+                    <button class="btn btn-sm" onclick="openModal('designation',${d.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem('designation',${d.id})">Delete</button>
+                </td></tr>
+            `).join('');
+        }
+
+        async function loadFaculty() {
+            const faculty = await fetch(`${API}/admin/faculty`).then(r => r.json());
+            document.getElementById('faculty-list').innerHTML = faculty.map(f => `
+                <tr><td>${f.faculty_name}</td><td>${f.employee_id||'N/A'}</td><td>${f.dept_id||'N/A'}</td><td>${f.phone||'N/A'}</td><td>
+                    <button class="btn btn-sm" onclick="openModal('faculty',${f.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem('faculty',${f.id})">Delete</button>
+                </td></tr>
+            `).join('');
+        }
+
+        async function loadLeaveTypes() {
+            const types = await fetch(`${API}/admin/leave-types`).then(r => r.json());
+            document.getElementById('leave-types-list').innerHTML = types.map(t => `
+                <tr><td>${t.name}</td><td>${t.code}</td><td>${t.max_days_per_year||'Unlimited'}</td><td>
+                    <button class="btn btn-sm" onclick="openModal('leave-type',${t.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem('leave-type',${t.id})">Delete</button>
+                </td></tr>
+            `).join('');
+        }
+
+        async function loadAcademicYears() {
+            const years = await fetch(`${API}/admin/academic-years`).then(r => r.json());
+            document.getElementById('academic-years-list').innerHTML = years.map(y => `
+                <tr><td>${y.yr}</td><td>
+                    <button class="btn btn-sm" onclick="openModal('academic-year',${y.id})">Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteItem('academic-year',${y.id})">Delete</button>
+                </td></tr>
+            `).join('');
+        }
+
+        showSection('departments');
+    </script>
+</body>
+</html>

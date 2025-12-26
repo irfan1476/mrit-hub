@@ -183,6 +183,22 @@ export class AuthService {
     await this.usersService.updateRefreshToken(userId, null);
   }
 
+  async demoLogin(loginDto: LoginDto): Promise<any> {
+    const { email, password } = loginDto;
+    
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.active) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
+
+    this.logger.log(`Demo login: ${email}`);
+    return this.generateTokens(user);
+  }
+
   private async determineUserRole(email: string): Promise<UserRole> {
     // Check if faculty exists
     // Note: This would need actual faculty table query

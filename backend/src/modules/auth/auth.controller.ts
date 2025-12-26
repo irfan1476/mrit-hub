@@ -20,21 +20,7 @@ export class AuthController {
 
   @Post('demo-login')
   async demoLogin(@Body() loginDto: LoginDto) {
-    // Demo login for testing - accepts any email with password "demo123"
-    if (loginDto.password === 'demo123') {
-      return {
-        accessToken: 'demo-access-token',
-        refreshToken: 'demo-refresh-token',
-        user: {
-          id: 1,
-          email: loginDto.email,
-          role: 'FACULTY',
-          firstName: 'Demo',
-          lastName: 'User'
-        }
-      };
-    }
-    throw new UnauthorizedException('Invalid demo credentials');
+    return this.authService.demoLogin(loginDto);
   }
 
   @Get('verify-email')

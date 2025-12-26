@@ -8,6 +8,7 @@ import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SmsModule } from './modules/sms/sms.module';
 import { LeaveModule } from './modules/leave/leave.module';
 import { DashboardModule } from './modules/dashboard/dashboard.module';
+import { AdminModule } from './modules/admin/admin.module';
 import { AppController } from './app.controller';
 
 @Module({
@@ -17,11 +18,10 @@ import { AppController } from './app.controller';
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
-      url: process.env.DATABASE_URL,
+      url: process.env.DATABASE_URL || 'postgresql://mrit_admin:mrit_secure_pass_2024@localhost:5432/mrit_hub',
       autoLoadEntities: true,
-      synchronize: false, // Use migrations in production
-      logging: process.env.NODE_ENV === 'development',
-      ssl: false,
+      synchronize: false,
+      logging: false,
     }),
     AuthModule,
     UsersModule,
@@ -29,7 +29,7 @@ import { AppController } from './app.controller';
     SmsModule,
     AttendanceModule,
     LeaveModule,
-    DashboardModule,
+    AdminModule,
   ],
   controllers: [AppController],
 })
