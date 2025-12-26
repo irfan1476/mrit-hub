@@ -9,7 +9,7 @@ DECLARE
     co_id INT;
 BEGIN
     -- Get current academic year
-    SELECT id INTO current_ay_id FROM academic_year WHERE year = '2024-25' LIMIT 1;
+    SELECT id INTO current_ay_id FROM academic_year WHERE yr = '2024-25' LIMIT 1;
     
     -- Get first section (A)
     SELECT id INTO section_id FROM section WHERE name = 'A' LIMIT 1;
